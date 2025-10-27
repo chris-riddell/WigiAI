@@ -237,7 +237,8 @@ jobs:
         run: |
           GITHUB_USER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
           GITHUB_REPO=$(echo "${{ github.repository }}" | cut -d'/' -f2)
-          ./scripts/generate_appcast.sh "$GITHUB_USER" "$GITHUB_REPO" appcast.xml
+          VERSION="v${{ steps.get_version.outputs.VERSION }}"
+          ./scripts/generate_appcast.sh "$GITHUB_USER" "$GITHUB_REPO" appcast.xml "" "$VERSION"
 
       - name: Update appcast in repository
         run: |

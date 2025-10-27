@@ -10,6 +10,7 @@ GITHUB_USER="${1:-chris-riddell}"
 GITHUB_REPO="${2:-WigiAI}"
 OUTPUT_FILE="${3:-appcast.xml}"
 PRIVATE_KEY_FILE="${4:-}"  # Optional: path to private key file
+SPECIFIC_VERSION="${5:-}"  # Optional: specific version tag (e.g., v1.0.2)
 
 # Colors
 BLUE='\033[0;34m'
@@ -64,11 +65,17 @@ cat > "$OUTPUT_FILE" << 'XMLHEADER'
     <language>en</language>
 XMLHEADER
 
-# Fetch latest release from GitHub API
+# Fetch release from GitHub API
 echo -e "${BLUE}📡 Fetching release info from GitHub...${NC}"
 
-# Get latest release info
-RELEASE_JSON=$(curl -s "https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/releases/latest" || echo "{}")
+# Get release info (specific version or latest)
+if [[ -n "$SPECIFIC_VERSION" ]]; then
+    echo -e "${BLUE}   Fetching specific version: ${SPECIFIC_VERSION}${NC}"
+    RELEASE_JSON=$(curl -s "https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/releases/tags/${SPECIFIC_VERSION}" || echo "{}")
+else
+    echo -e "${BLUE}   Fetching latest release${NC}"
+    RELEASE_JSON=$(curl -s "https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/releases/latest" || echo "{}")
+fi
 
 if [[ "$RELEASE_JSON" == "{}" ]] || echo "$RELEASE_JSON" | grep -q "\"message\": \"Not Found\""; then
     echo -e "${RED}❌ No releases found or API error${NC}"
