@@ -1,0 +1,121 @@
+# Xcode
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+*.xcworkspace/*
+!*.xcworkspace/contents.xcworkspacedata
+
+# Build artifacts
+build/
+build*/
+DerivedData/
+*.app
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Release artifacts
+*.dmg
+*.zip
+*.pkg
+
+# Swift Package Manager
+.build/
+Packages/
+Package.pins
+Package.resolved
+*.swiftpm
+
+# CocoaPods (if used in future)
+Pods/
+*.xcworkspace
+Podfile.lock
+
+# Carthage (if used in future)
+Carthage/Build/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# User settings
+xcuserdata/
+*.xcuserstate
+
+# Generated files
+*.generated.swift
+
+# Backup files
+*~
+*.swp
+*.swo
+*~.nib
+*.bak
+*.backup
+*.orig
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Tool outputs
+repomix-output.xml
+repomix-output.txt
+
+# App-specific user data (stored in ~/Library/Application Support/WigiAI/)
+# These should NOT be in the repo, only in user's home directory
+app_settings.json
+
+# Project documentation (contains internal notes)
+CLAUDE.md
+GITHUB_SETUP_COMPLETE.md
+SETUP_SUMMARY.md
+AUTO_UPDATE_SETUP.md
+AUTO_UPDATE_PLAN.md
+
+# Security and sensitive files
+*.p12
+*.mobileprovision
+*.provisionprofile
+*.certSigningRequest
+*.cer
+*.key
+*.pem
+secrets/
+.env
+.env.*
+!.env.example
+credentials.json
+config.json
+api_keys.txt
+
+# Claude Code configuration (contains username and local paths)
+.claude/
+
+# Code signing
+exportOptions.plist
+*.xcarchive

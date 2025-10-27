@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="WigiAI - AI-powered desktop companions for macOS. Conversational habit tracking with character widgets, voice interaction, and local/cloud AI support.">
+    <meta name="keywords" content="macOS AI assistant, habit tracker, desktop widget, menubar app, productivity, SwiftUI, OpenAI, Ollama">
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="WigiAI - AI Desktop Companions for macOS">
+    <meta property="og:description" content="Track habits naturally through AI conversations. Characters live on your desktop, remember context, and help you build better routines.">
+    <meta property="og:image" content="https://raw.githubusercontent.com/chris-riddell/WigiAI/main/WigiAI/Assets.xcassets/AppIcon.appiconset/icon_512x512.png">
+
+    <title>WigiAI - AI Desktop Companions for macOS</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 60px 20px 40px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .tagline {
+            font-size: 1.5em;
+            opacity: 0.95;
+            margin-bottom: 40px;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+
+        .btn {
+            padding: 15px 35px;
+            font-size: 1.1em;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .content {
+            background: white;
+            border-radius: 20px;
+            padding: 60px 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .feature {
+            padding: 20px;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+
+        .feature h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .feature-emoji {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .section {
+            margin: 50px 0;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .install-code {
+            background: #2d3748;
+            color: #48bb78;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        ul {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        li {
+            margin: 10px 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: white;
+            opacity: 0.9;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5em;
+            }
+
+            .tagline {
+                font-size: 1.2em;
+            }
+
+            .content {
+                padding: 40px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 WigiAI</h1>
+            <p class="tagline">AI Companions That Live on Your Desktop</p>
+            <div class="cta-buttons">
+                <a href="https://github.com/chris-riddell/WigiAI/releases/latest" class="btn btn-primary">Download for macOS</a>
+                <a href="https://github.com/chris-riddell/WigiAI" class="btn btn-secondary">View on GitHub</a>
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="section">
+                <h2>What is WigiAI?</h2>
+                <p>WigiAI brings AI companions to your macOS desktop as draggable widgets that live alongside your work. Unlike chat apps that hide in tabs or menus, your AI assistant is always visible and accessible. Track habits naturally through conversation, get personalized reminders with celebration animations, and build better routines with AI that remembers your context.</p>
+            </div>
+
+            <div class="section">
+                <h2>💭 Why I Built This</h2>
+                <p>I wanted an AI assistant that felt more like a companion than a tool. Existing AI apps either hide in browser tabs or lack the habit tracking features I needed. I kept forgetting to check my habit tracker, and my AI conversations felt disconnected from my actual goals.</p>
+                <p><strong>WigiAI combines the best of both worlds:</strong></p>
+                <ul>
+                    <li><strong>Visible desktop widgets</strong> - Your AI is always present, not hidden away</li>
+                    <li><strong>Conversational habit tracking</strong> - Just chat instead of clicking checkboxes</li>
+                    <li><strong>Persistent memory</strong> - AI remembers your context across all conversations</li>
+                    <li><strong>Privacy-first design</strong> - Offline voice features and local AI support (Ollama)</li>
+                </ul>
+                <p>I built this for myself, but I'm sharing it in case it helps others too. <strong>Pull requests are welcome!</strong> 🙌</p>
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number">10+</div>
+                    <div class="stat-label">Character Templates</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Privacy-First</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">Free</div>
+                    <div class="stat-label">& Open Source</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>✨ Features</h2>
+                <div class="features">
+                    <div class="feature">
+                        <span class="feature-emoji">💬</span>
+                        <h3>Desktop Companions</h3>
+                        <p>Draggable character widgets that persist across restarts. Always visible, never hidden in menus.</p>
+                    </div>
+
+                    <div class="feature">
+                        <span class="feature-emoji">🎯</span>
+                        <h3>Habit Tracking</h3>
+                        <p>Track habits naturally through conversation. AI parses your updates, celebrates streaks with confetti animations, and shows 7-day visual progress.</p>
+                    </div>
+
+                    <div class="feature">
+                        <span class="feature-emoji">🧠</span>
+                        <h3>Persistent Memory</h3>
+                        <p>Context that updates automatically. Your AI remembers what matters across all conversations.</p>
+                    </div>
+
+                    <div class="feature">
+                        <span class="feature-emoji">🎤</span>
+                        <h3>Voice Interaction</h3>
+                        <p>Push-to-talk with native macOS speech recognition (offline, zero cost). Text-to-speech with 10 premium voices.</p>
+                    </div>
+
+                    <div class="feature">
+                        <span class="feature-emoji">🏠</span>
+                        <h3>Local or Cloud</h3>
+                        <p>Works with OpenAI, Ollama, or any OpenAI-compatible API. Your choice, your data.</p>
+                    </div>
+
+                    <div class="feature">
+                        <span class="feature-emoji">🎨</span>
+                        <h3>Fully Customizable Characters</h3>
+                        <p>Create AI companions for anything! Includes 10 ready-to-use templates (Fitness Coach, Study Buddy, Budget Tracker, etc.) or build your own from scratch.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🚀 Quick Start</h2>
+                <ol>
+                    <li><strong>Download</strong> the latest release from GitHub</li>
+                    <li><strong>Install</strong> to /Applications and run</li>
+                    <li><strong>Add API key</strong> (OpenAI, Ollama, or other compatible service)</li>
+                    <li><strong>Choose a character</strong> from the library or create your own</li>
+                    <li><strong>Start chatting</strong> - your AI companion is ready!</li>
+                </ol>
+            </div>
+
+            <div class="section">
+                <h2>🎭 Character Templates</h2>
+                <p><strong>Characters are totally customizable</strong> - create an AI companion for anything! Define custom personalities, habits, and reminders to fit your exact needs.</p>
+                <p>To get you started, here are 10 pre-made templates you can use as-is or customize:</p>
+                <ul>
+                    <li><strong>Executive Assistant</strong> (Productivity) - Task management, email, daily planning</li>
+                    <li><strong>Fitness Coach</strong> (Health) - Workout tracking, nutrition, motivation</li>
+                    <li><strong>Sleep Optimizer</strong> (Health) - Sleep schedule, bedtime routine, quality tracking</li>
+                    <li><strong>Study Buddy</strong> (Learning) - Study sessions, flashcards, practice problems</li>
+                    <li><strong>Writing Coach</strong> (Creative) - Morning pages, writing sessions, editing time</li>
+                    <li><strong>Mindfulness Guide</strong> (Health) - Meditation, gratitude, breathing exercises</li>
+                    <li><strong>Budget Tracker</strong> (Finance) - Expense logging, budget reviews, no-spend days</li>
+                    <li><strong>Meal Prep Partner</strong> (Lifestyle) - Meal planning, grocery shopping, prep sessions</li>
+                    <li><strong>Focus Guardian</strong> (Productivity) - Pomodoro, deep work, distraction management</li>
+                    <li><strong>Habit Builder</strong> (Lifestyle) - General habit formation, streaks, weekly reviews</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>🔒 Privacy First</h2>
+                <ul>
+                    <li>All data stored locally in JSON files - no cloud sync</li>
+                    <li>API keys stored securely in app's private storage</li>
+                    <li>Works 100% offline with local AI (Ollama)</li>
+                    <li>Voice features are completely offline (native macOS APIs)</li>
+                    <li>Open source - verify the code yourself (MIT License)</li>
+                    <li>No telemetry, no analytics, no tracking</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>💻 Requirements</h2>
+                <ul>
+                    <li>macOS 14.0 (Sonoma) or later</li>
+                    <li>Apple Silicon or Intel Mac</li>
+                    <li>OpenAI API key, Ollama installation, or compatible API endpoint</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>🛠️ Built With</h2>
+                <ul>
+                    <li>Swift & SwiftUI (100% native macOS)</li>
+                    <li>OpenAI-compatible APIs with streaming support</li>
+                    <li>Native macOS Speech & Vision APIs</li>
+                    <li>Sparkle auto-update framework</li>
+                </ul>
+            </div>
+        </div>
+
+        <footer>
+            <p>Made with ❤️ for the macOS community</p>
+            <p style="margin-top: 10px;">
+                <a href="https://github.com/chris-riddell/WigiAI" style="color: white; text-decoration: none; margin: 0 10px;">GitHub</a> •
+                <a href="https://github.com/chris-riddell/WigiAI/issues" style="color: white; text-decoration: none; margin: 0 10px;">Report Issue</a> •
+                <a href="https://github.com/chris-riddell/WigiAI/blob/main/LICENSE" style="color: white; text-decoration: none; margin: 0 10px;">License</a>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
