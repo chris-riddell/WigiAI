@@ -35,7 +35,7 @@
 	<key>SUScheduledCheckInterval</key>
 	<integer>86400</integer>
 	<key>SUPublicEDKey</key>
-	<string></string>
+	<string>gOekpbiQA2JDtYybLW/gzJpbLsu7O89BLA0VfauNObU=</string>
 	<key>SUEnableSystemProfiling</key>
 	<false/>
 </dict>

@@ -119,3 +119,4 @@ api_keys.txt
 # Code signing
 exportOptions.plist
 *.xcarchive
+sparkle_keys/
