@@ -77,6 +77,10 @@ else
     RELEASE_JSON=$(curl -s "https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/releases/latest" || echo "{}")
 fi
 
+# Debug: Show what we got from GitHub API
+echo -e "${BLUE}🔍 API Response preview:${NC}"
+echo "$RELEASE_JSON" | head -20
+
 if [[ "$RELEASE_JSON" == "{}" ]] || echo "$RELEASE_JSON" | grep -q "\"message\": \"Not Found\""; then
     echo -e "${RED}❌ No releases found or API error${NC}"
     echo -e "${BLUE}ℹ️  Creating empty appcast (will be populated after first release)${NC}"
