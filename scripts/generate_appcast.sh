@@ -92,20 +92,24 @@ fi
 VERSION=$(echo "$RELEASE_JSON" | grep '"tag_name"' | sed 's/.*"tag_name": "\(.*\)".*/\1/' | sed 's/^v//')
 RELEASE_DATE=$(echo "$RELEASE_JSON" | grep '"published_at"' | sed 's/.*"published_at": "\(.*\)".*/\1/')
 RELEASE_NOTES=$(echo "$RELEASE_JSON" | grep '"body"' | sed 's/.*"body": "\(.*\)".*/\1/' | sed 's/\\n/<br\/>/g' | sed 's/\\"/"/g')
-DMG_URL=$(echo "$RELEASE_JSON" | grep -o '"browser_download_url": "[^"]*WigiAI-.*\.dmg"' | sed 's/"browser_download_url": "\(.*\)"/\1/')
 
-# Debug: Show what assets are in the release
-echo -e "${BLUE}🔍 Debug: Assets found in release:${NC}"
-echo "$RELEASE_JSON" | grep -o '"name": "[^"]*"' | head -10
+# Try to find DMG URL with multiple patterns (more flexible matching)
+DMG_URL=$(echo "$RELEASE_JSON" | grep -o '"browser_download_url":[[:space:]]*"[^"]*\.dmg"' | sed 's/.*"browser_download_url":[[:space:]]*"\([^"]*\)"/\1/' | head -1)
+
+# Debug output
+echo -e "${BLUE}🔍 Debug info:${NC}"
+echo -e "${BLUE}   Version: $VERSION${NC}"
+echo -e "${BLUE}   Release date: $RELEASE_DATE${NC}"
+echo -e "${BLUE}   DMG URL: ${DMG_URL:-[NOT FOUND]}${NC}"
 
 # Get file size
 if [[ -n "$DMG_URL" ]]; then
+    echo -e "${GREEN}✅ Found DMG: $DMG_URL${NC}"
     FILE_SIZE=$(curl -sI "$DMG_URL" | grep -i "content-length" | awk '{print $2}' | tr -d '\r')
 else
     echo -e "${RED}❌ No DMG file found in release${NC}"
-    echo -e "${YELLOW}Expected pattern: WigiAI-*.dmg${NC}"
-    echo -e "${YELLOW}Release JSON excerpt:${NC}"
-    echo "$RELEASE_JSON" | grep -A 5 '"assets"' | head -20
+    echo -e "${YELLOW}Release assets:${NC}"
+    echo "$RELEASE_JSON" | grep '"browser_download_url"' | head -5
     exit 1
 fi
 
