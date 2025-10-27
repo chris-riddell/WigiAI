@@ -90,8 +90,7 @@ repomix-output.txt
 # These should NOT be in the repo, only in user's home directory
 app_settings.json
 
-# Project documentation (contains internal notes)
-CLAUDE.md
+# Temporary setup documentation
 GITHUB_SETUP_COMPLETE.md
 SETUP_SUMMARY.md
 AUTO_UPDATE_SETUP.md
