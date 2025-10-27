@@ -54,7 +54,7 @@ jobs:
 
       # Option 1: Build WITHOUT code signing (simpler, but users get warning)
       - name: Build app (unsigned)
-        if: ${{ !secrets.CERTIFICATES_P12 }}
+        if: ${{ secrets.CERTIFICATES_P12 == '' }}
         run: |
           xcodebuild \
             -scheme WigiAI \
@@ -67,7 +67,7 @@ jobs:
 
       # Option 2: Build WITH code signing (if certificates are configured)
       - name: Import signing certificate
-        if: ${{ secrets.CERTIFICATES_P12 }}
+        if: ${{ secrets.CERTIFICATES_P12 != '' }}
         env:
           CERTIFICATES_P12: ${{ secrets.CERTIFICATES_P12 }}
           CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
@@ -94,7 +94,7 @@ jobs:
           rm certificate.p12
 
       - name: Build app (signed)
-        if: ${{ secrets.CERTIFICATES_P12 }}
+        if: ${{ secrets.CERTIFICATES_P12 != '' }}
         env:
           DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
         run: |
@@ -240,7 +240,7 @@ jobs:
           retention-days: 90
 
       - name: Cleanup keychain
-        if: always() && secrets.CERTIFICATES_P12
+        if: ${{ always() && secrets.CERTIFICATES_P12 != '' }}
         run: |
           KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain
           if [ -f "$KEYCHAIN_PATH" ]; then
