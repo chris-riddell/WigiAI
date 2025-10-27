@@ -244,6 +244,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          # Reset any local changes from version update
+          git reset --hard HEAD
+
+          # Fetch and checkout main
           git fetch origin main
           git checkout main
 
