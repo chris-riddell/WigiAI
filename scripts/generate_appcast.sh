@@ -68,13 +68,30 @@ XMLHEADER
 # Fetch release from GitHub API
 echo -e "${BLUE}📡 Fetching release info from GitHub...${NC}"
 
+# Prepare curl authentication if GITHUB_TOKEN is available
+if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+    CURL_AUTH_HEADER="-H \"Authorization: Bearer ${GITHUB_TOKEN}\""
+    echo -e "${BLUE}   Using authenticated GitHub API requests${NC}"
+else
+    CURL_AUTH_HEADER=""
+    echo -e "${YELLOW}   Warning: No GITHUB_TOKEN, using unauthenticated requests (rate limited)${NC}"
+fi
+
 # Get release info (specific version or latest)
 if [[ -n "$SPECIFIC_VERSION" ]]; then
     echo -e "${BLUE}   Fetching specific version: ${SPECIFIC_VERSION}${NC}"
-    RELEASE_JSON=$(curl -s "https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/releases/tags/${SPECIFIC_VERSION}" || echo "{}")
+    if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+        RELEASE_JSON=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" "https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/releases/tags/${SPECIFIC_VERSION}" || echo "{}")
+    else
+        RELEASE_JSON=$(curl -s "https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/releases/tags/${SPECIFIC_VERSION}" || echo "{}")
+    fi
 else
     echo -e "${BLUE}   Fetching latest release${NC}"
-    RELEASE_JSON=$(curl -s "https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/releases/latest" || echo "{}")
+    if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+        RELEASE_JSON=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" "https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/releases/latest" || echo "{}")
+    else
+        RELEASE_JSON=$(curl -s "https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/releases/latest" || echo "{}")
+    fi
 fi
 
 # Debug: Show what we got from GitHub API

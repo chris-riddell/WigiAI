@@ -234,6 +234,7 @@ jobs:
       - name: Generate Sparkle appcast
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           GITHUB_USER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
           GITHUB_REPO=$(echo "${{ github.repository }}" | cut -d'/' -f2)
