@@ -88,13 +88,20 @@ XMLFOOTER
     exit 0
 fi
 
-# Extract release info
-VERSION=$(echo "$RELEASE_JSON" | grep '"tag_name"' | sed 's/.*"tag_name": "\(.*\)".*/\1/' | sed 's/^v//')
-RELEASE_DATE=$(echo "$RELEASE_JSON" | grep '"published_at"' | sed 's/.*"published_at": "\(.*\)".*/\1/')
-RELEASE_NOTES=$(echo "$RELEASE_JSON" | grep '"body"' | sed 's/.*"body": "\(.*\)".*/\1/' | sed 's/\\n/<br\/>/g' | sed 's/\\"/"/g')
-
-# Try to find DMG URL with multiple patterns (more flexible matching)
-DMG_URL=$(echo "$RELEASE_JSON" | grep -o '"browser_download_url":[[:space:]]*"[^"]*\.dmg"' | sed 's/.*"browser_download_url":[[:space:]]*"\([^"]*\)"/\1/' | head -1)
+# Check if jq is available for better JSON parsing
+if command -v jq &> /dev/null; then
+    echo -e "${BLUE}   Using jq for JSON parsing${NC}"
+    VERSION=$(echo "$RELEASE_JSON" | jq -r '.tag_name' | sed 's/^v//')
+    RELEASE_DATE=$(echo "$RELEASE_JSON" | jq -r '.published_at')
+    RELEASE_NOTES=$(echo "$RELEASE_JSON" | jq -r '.body' | sed 's/\n/<br\/>/g')
+    DMG_URL=$(echo "$RELEASE_JSON" | jq -r '.assets[] | select(.name | endswith(".dmg")) | .browser_download_url' | head -1)
+else
+    echo -e "${YELLOW}   Warning: jq not found, using grep/sed (less reliable)${NC}"
+    VERSION=$(echo "$RELEASE_JSON" | grep '"tag_name"' | sed 's/.*"tag_name": "\(.*\)".*/\1/' | sed 's/^v//')
+    RELEASE_DATE=$(echo "$RELEASE_JSON" | grep '"published_at"' | sed 's/.*"published_at": "\(.*\)".*/\1/')
+    RELEASE_NOTES=$(echo "$RELEASE_JSON" | grep '"body"' | sed 's/.*"body": "\(.*\)".*/\1/' | sed 's/\\n/<br\/>/g' | sed 's/\\"/"/g')
+    DMG_URL=$(echo "$RELEASE_JSON" | grep -o '"browser_download_url":[[:space:]]*"[^"]*\.dmg"' | sed 's/.*"browser_download_url":[[:space:]]*"\([^"]*\)"/\1/' | head -1)
+fi
 
 # Debug output
 echo -e "${BLUE}🔍 Debug info:${NC}"
