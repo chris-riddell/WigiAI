@@ -141,15 +141,23 @@ jobs:
 
           1. Download `WigiAI-${{ steps.get_version.outputs.VERSION }}.dmg`
           2. Open the DMG file
-          3. Drag WigiAI.app to your Applications folder (or anywhere you prefer)
-          4. Launch WigiAI
+          3. Drag WigiAI.app to your Applications folder
+          4. **Important:** Run this command in Terminal before launching:
+             ```bash
+             xattr -cr /Applications/WigiAI.app
+             ```
+          5. Launch WigiAI from Applications folder
 
-          ### First Launch
+          ### Troubleshooting
 
-          If you see a security warning:
-          1. Open **System Settings** → **Privacy & Security**
-          2. Scroll down and click **"Open Anyway"**
-          3. Or run in Terminal: `xattr -cr /Applications/WigiAI.app`
+          **"WigiAI is damaged and can't be opened"**
+          - This is a macOS security feature for unsigned apps
+          - **Solution:** Run `xattr -cr /Applications/WigiAI.app` in Terminal
+          - This removes the quarantine flag and allows the app to run
+
+          **"Cannot open because developer cannot be verified"**
+          - Right-click WigiAI.app → Click "Open"
+          - Or: **System Settings** → **Privacy & Security** → Click **"Open Anyway"**
 
           ### Requirements
           - macOS 14.0 (Sonoma) or later

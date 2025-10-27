@@ -85,17 +85,35 @@ I built this for myself, but I'm sharing it in case it helps others too. If you 
 
 1. **Download the latest release:**
    - Visit the [Releases page](https://github.com/chris-riddell/WigiAI/releases/latest)
-   - Download `WigiAI-v1.0.0.dmg` (or latest version)
+   - Download `WigiAI-v1.0.1.dmg` (or latest version)
 
 2. **Install the app:**
    - Open the downloaded DMG file
    - Drag WigiAI.app to your Applications folder
    - Eject the DMG
 
-3. **Launch WigiAI:**
+3. **Remove quarantine flag (IMPORTANT):**
+   - Open Terminal and run:
+   ```bash
+   xattr -cr /Applications/WigiAI.app
+   ```
+   - This removes macOS's quarantine flag for unsigned apps
+
+4. **Launch WigiAI:**
    - Open from Applications folder
-   - Right-click → Open (first time only, to bypass Gatekeeper)
+   - If still blocked, right-click → Open (first time only)
    - Allow microphone access if using voice features (optional)
+
+### Troubleshooting Installation
+
+**"WigiAI is damaged and can't be opened"**
+- This is macOS Gatekeeper blocking unsigned apps
+- **Fix:** Run `xattr -cr /Applications/WigiAI.app` in Terminal
+- Then try opening the app again
+
+**"Cannot open because developer cannot be verified"**
+- Right-click WigiAI.app → Click "Open"
+- Or: System Settings → Privacy & Security → Click "Open Anyway"
 
 ### Build from Source
 
