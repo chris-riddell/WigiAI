@@ -94,11 +94,18 @@ RELEASE_DATE=$(echo "$RELEASE_JSON" | grep '"published_at"' | sed 's/.*"publishe
 RELEASE_NOTES=$(echo "$RELEASE_JSON" | grep '"body"' | sed 's/.*"body": "\(.*\)".*/\1/' | sed 's/\\n/<br\/>/g' | sed 's/\\"/"/g')
 DMG_URL=$(echo "$RELEASE_JSON" | grep -o '"browser_download_url": "[^"]*WigiAI-.*\.dmg"' | sed 's/"browser_download_url": "\(.*\)"/\1/')
 
+# Debug: Show what assets are in the release
+echo -e "${BLUE}🔍 Debug: Assets found in release:${NC}"
+echo "$RELEASE_JSON" | grep -o '"name": "[^"]*"' | head -10
+
 # Get file size
 if [[ -n "$DMG_URL" ]]; then
     FILE_SIZE=$(curl -sI "$DMG_URL" | grep -i "content-length" | awk '{print $2}' | tr -d '\r')
 else
     echo -e "${RED}❌ No DMG file found in release${NC}"
+    echo -e "${YELLOW}Expected pattern: WigiAI-*.dmg${NC}"
+    echo -e "${YELLOW}Release JSON excerpt:${NC}"
+    echo "$RELEASE_JSON" | grep -A 5 '"assets"' | head -20
     exit 1
 fi
 
