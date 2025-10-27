@@ -68,14 +68,7 @@ XMLHEADER
 # Fetch release from GitHub API
 echo -e "${BLUE}📡 Fetching release info from GitHub...${NC}"
 
-# Prepare curl authentication if GITHUB_TOKEN is available
-if [[ -n "${GITHUB_TOKEN:-}" ]]; then
-    CURL_AUTH_HEADER="-H \"Authorization: Bearer ${GITHUB_TOKEN}\""
-    echo -e "${BLUE}   Using authenticated GitHub API requests${NC}"
-else
-    CURL_AUTH_HEADER=""
-    echo -e "${YELLOW}   Warning: No GITHUB_TOKEN, using unauthenticated requests (rate limited)${NC}"
-fi
+# Prepare curl authentication if GITHUB_TOKEN is available (prevents rate limiting)
 
 # Get release info (specific version or latest)
 if [[ -n "$SPECIFIC_VERSION" ]]; then
@@ -94,10 +87,6 @@ else
     fi
 fi
 
-# Debug: Show what we got from GitHub API
-echo -e "${BLUE}🔍 API Response preview:${NC}"
-echo "$RELEASE_JSON" | head -20
-
 if [[ "$RELEASE_JSON" == "{}" ]] || echo "$RELEASE_JSON" | grep -q "\"message\": \"Not Found\""; then
     echo -e "${RED}❌ No releases found or API error${NC}"
     echo -e "${BLUE}ℹ️  Creating empty appcast (will be populated after first release)${NC}"
@@ -111,33 +100,22 @@ fi
 
 # Check if jq is available for better JSON parsing
 if command -v jq &> /dev/null; then
-    echo -e "${BLUE}   Using jq for JSON parsing${NC}"
     VERSION=$(echo "$RELEASE_JSON" | jq -r '.tag_name' | sed 's/^v//')
     RELEASE_DATE=$(echo "$RELEASE_JSON" | jq -r '.published_at')
     RELEASE_NOTES=$(echo "$RELEASE_JSON" | jq -r '.body' | sed 's/\n/<br\/>/g')
     DMG_URL=$(echo "$RELEASE_JSON" | jq -r '.assets[] | select(.name | endswith(".dmg")) | .browser_download_url' | head -1)
 else
-    echo -e "${YELLOW}   Warning: jq not found, using grep/sed (less reliable)${NC}"
     VERSION=$(echo "$RELEASE_JSON" | grep '"tag_name"' | sed 's/.*"tag_name": "\(.*\)".*/\1/' | sed 's/^v//')
     RELEASE_DATE=$(echo "$RELEASE_JSON" | grep '"published_at"' | sed 's/.*"published_at": "\(.*\)".*/\1/')
     RELEASE_NOTES=$(echo "$RELEASE_JSON" | grep '"body"' | sed 's/.*"body": "\(.*\)".*/\1/' | sed 's/\\n/<br\/>/g' | sed 's/\\"/"/g')
     DMG_URL=$(echo "$RELEASE_JSON" | grep -o '"browser_download_url":[[:space:]]*"[^"]*\.dmg"' | sed 's/.*"browser_download_url":[[:space:]]*"\([^"]*\)"/\1/' | head -1)
 fi
 
-# Debug output
-echo -e "${BLUE}🔍 Debug info:${NC}"
-echo -e "${BLUE}   Version: $VERSION${NC}"
-echo -e "${BLUE}   Release date: $RELEASE_DATE${NC}"
-echo -e "${BLUE}   DMG URL: ${DMG_URL:-[NOT FOUND]}${NC}"
-
 # Get file size
 if [[ -n "$DMG_URL" ]]; then
-    echo -e "${GREEN}✅ Found DMG: $DMG_URL${NC}"
     FILE_SIZE=$(curl -sI "$DMG_URL" | grep -i "content-length" | awk '{print $2}' | tr -d '\r')
 else
     echo -e "${RED}❌ No DMG file found in release${NC}"
-    echo -e "${YELLOW}Release assets:${NC}"
-    echo "$RELEASE_JSON" | grep '"browser_download_url"' | head -5
     exit 1
 fi
 
