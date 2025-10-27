@@ -24,6 +24,10 @@
 	<true/>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>WigiAI needs notification permissions to send you reminders from your AI companions at scheduled times.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>WigiAI uses your microphone for voice-to-text conversation with your AI companions. All processing is done locally on your Mac.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>WigiAI uses speech recognition to convert your voice into text for natural conversations with your AI companions.</string>
 	<key>NSSupportsAutomaticTermination</key>
 	<false/>
 	<key>NSSupportsSuddenTermination</key>
