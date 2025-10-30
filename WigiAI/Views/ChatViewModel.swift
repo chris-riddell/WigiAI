@@ -147,9 +147,11 @@ class ChatViewModel: ObservableObject {
     /// then switch to the cheaper mini model once the character is established.
     ///
     /// **Conditions for switch:**
+    /// - Auto-switch setting is enabled
     /// - Character has exactly 10 messages (5 exchanges)
-    /// - Character is using customModel "gpt-4.1" OR has no customModel and global is "gpt-4.1"
-    /// - Automatically sets customModel to "gpt-4.1-mini"
+    /// - Character has NO custom model set (respects user's explicit model choice)
+    /// - Global default model is "gpt-4.1"
+    /// - Sets customModel to "gpt-4.1-mini" to lock in the switch
     private func checkModelAutoSwitch() {
         // Check if auto-switch is enabled
         guard self.appDelegate.appState.settings.autoSwitchToMini else { return }
@@ -159,13 +161,14 @@ class ChatViewModel: ObservableObject {
         // Only check at exactly 10 messages (after 5 exchanges)
         guard messageCount == 10 else { return }
 
-        // Get current effective model
-        let effectiveModel = self.currentCharacter.customModel ?? self.appDelegate.appState.settings.globalAPIConfig.model
+        // IMPORTANT: Only auto-switch if character is using global default (no custom model)
+        // If user explicitly set a custom model, respect their choice
+        guard self.currentCharacter.customModel == nil else { return }
 
-        // Only switch if currently using gpt-4.1
-        guard effectiveModel == "gpt-4.1" else { return }
+        // Check if global default is gpt-4.1
+        guard self.appDelegate.appState.settings.globalAPIConfig.model == "gpt-4.1" else { return }
 
-        // Switch to mini
+        // Switch to mini by setting custom model
         LoggerService.ai.info("🔄 Auto-switching '\(self.currentCharacter.name)' from gpt-4.1 to gpt-4.1-mini after 10 messages")
         updateCharacter { character in
             character.customModel = "gpt-4.1-mini"
