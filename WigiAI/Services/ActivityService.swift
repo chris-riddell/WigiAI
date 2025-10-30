@@ -313,30 +313,3 @@ class ActivityService: NSObject, ObservableObject {
     }
 }
 
-// MARK: - Backward Compatibility Aliases
-
-extension ActivityService {
-    /// Legacy method name for compatibility
-    @available(*, deprecated, renamed: "scheduleActivities(for:)")
-    func scheduleReminders(for character: Character) {
-        scheduleActivities(for: character)
-    }
-
-    /// Legacy method name for compatibility
-    @available(*, deprecated, renamed: "scheduleActivities(for:)")
-    func scheduleHabitReminders(for character: Character) {
-        scheduleActivities(for: character)
-    }
-
-    /// Legacy method name for compatibility
-    @available(*, deprecated, renamed: "cancelActivities(for:)")
-    func cancelReminders(for characterId: UUID) {
-        cancelActivities(for: characterId)
-    }
-
-    /// Legacy method name for compatibility
-    @available(*, deprecated, renamed: "cancelActivities(for:)")
-    func cancelHabitReminders(for characterId: UUID) {
-        cancelActivities(for: characterId)
-    }
-}
