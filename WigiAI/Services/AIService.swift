@@ -420,16 +420,7 @@ class AIService: NSObject, ObservableObject {
         systemPrompt += """
 
 
-COMMUNICATION STYLE:
-This is a chat window interface. Be conversational and aim for brief, punchy responses that get straight to the point.
-
-However, prioritize being SMART and HELPFUL over being short:
-- If more context makes your response clearer or more useful, include it
-- Show awareness of the conversation history and the user's situation
-- Provide enough detail to demonstrate understanding and expertise
-- Don't be artificially brief when a thoughtful explanation would be better
-
-In short: Be concise by default, but never sacrifice quality, clarity, or helpfulness for brevity.
+STYLE: This is a chat window. Be conversational, brief, and punchy - but prioritize being smart and helpful over being short. Show awareness of context and provide enough detail to be genuinely useful.
 """
 
         // Add instructions for suggested responses (at END for recency bias)
@@ -647,41 +638,60 @@ You: "Hey! I see you haven't logged your meditation yet today. Have you had a ch
 
         // Create a system prompt for summarization
         let summaryPrompt = """
-        You are helping to maintain a current context summary for an AI character.
+        You are maintaining a persistent memory for an AI companion. This context helps you understand the user deeply and provide more intelligent, personalized responses.
 
-        EXISTING CURRENT CONTEXT (preserve this unless outdated):
+        EXISTING CONTEXT (preserve unless outdated):
         \(character.persistentContext.isEmpty ? "None yet." : character.persistentContext)
 
-        Your task: MERGE the recent conversation below with the existing context by:
-        1. KEEP ALL existing context that is still relevant (do NOT remove information unless it's outdated or contradicted)
-        2. ADD new important information from the conversation (goals, preferences, facts, progress, decisions, etc.)
-        3. UPDATE any context items that have changed (e.g., "started 2 weeks ago" → "started 3 weeks ago")
-        4. ONLY remove context if it's explicitly contradicted or clearly outdated
+        Your task: MERGE recent conversation with existing context to build comprehensive understanding.
 
-        CRITICAL RULES:
-        - This is an INCREMENTAL UPDATE, not a replacement or summary
-        - DEFAULT TO KEEPING existing context - when in doubt, preserve it
-        - Do NOT remove context just to be "brief" - completeness is more important than brevity
-        - If the conversation doesn't mention an existing topic, KEEP that topic in the context
-        - Only REMOVE context if it's directly contradicted by new information
-        - There is NO length limit - include all relevant information
+        WHAT TO CAPTURE (in order of priority):
+        1. **User's Goals & Intentions** - What they're working toward, why it matters to them
+        2. **Patterns & Preferences** - How they like to do things, communication style, timing preferences
+        3. **Current Situation** - What's happening in their life right now, challenges they're facing
+        4. **Progress & History** - What they've accomplished, how long they've been working on things, trends
+        5. **Important Facts** - Names, relationships, work details, key dates, constraints
+        6. **Emotional Context** - Motivation levels, concerns, what energizes or frustrates them
+        7. **Decisions & Commitments** - Specific plans, agreements, things they've decided to do
 
-        Format as bullet points with sub-bullets for details:
-        • Main topic or category
-          - Specific details, dates, preferences
-          - Progress updates, goals, or metrics
+        CRITICAL RULES FOR UPDATES:
+        - This is INCREMENTAL - add new info, update changed info, KEEP everything else
+        - Default to PRESERVING existing context - only remove if directly contradicted
+        - Be SPECIFIC - "Exercise 3x/week" not "Exercise regularly"
+        - Include TEMPORAL details - "Started meditation 2 weeks ago" not just "Meditates"
+        - Capture the WHY - "Exercise for energy" not just "Exercises"
+        - NO length limit - detailed context = smarter AI
 
-        Example format:
-        • User prefers morning check-ins
-        • Working on exercise goals (started 2 weeks ago)
-          - Completed 3 workouts this week
-          - Target: 5 workouts per week
-          - Enjoys running and strength training
-        • Interested in productivity techniques
-          - Currently using Pomodoro method
-          - Wants to improve focus during work hours
+        FORMAT (organized by topic):
+        • Topic/Area (be specific)
+          - Concrete detail with context
+          - Specific goals, metrics, or preferences
+          - Relevant history or patterns
 
-        Return ONLY the merged bullet point context, nothing else. Do not include explanations or commentary.
+        GOOD EXAMPLES:
+        • Fitness routine (building consistency)
+          - Started running 3 weeks ago, up to 2 miles now
+          - Goal: 5K by end of month, motivated by upcoming race
+          - Prefers morning workouts (6-7am), dislikes evening exercise
+          - Struggled with knee pain last week, taking it slower now
+
+        • Work situation
+          - Software engineer at startup, team of 8 people
+          - Major product launch next month causing stress
+          - Wants to improve focus, currently interrupted frequently
+          - Best work happens in morning before meetings start
+
+        • Communication preferences
+          - Appreciates directness, dislikes excessive cheerfulness
+          - Morning check-ins work best (not a morning person though)
+          - Responds well to accountability, not to guilt
+
+        BAD EXAMPLES (too vague):
+        • User exercises regularly
+        • Working on productivity
+        • Has some work stress
+
+        Return ONLY the merged, well-organized bullet point context. No meta-commentary.
         """
 
         messages.append(Message(role: "system", content: summaryPrompt))
