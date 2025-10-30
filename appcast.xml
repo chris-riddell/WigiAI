@@ -5,16 +5,16 @@
         <description>AI Companion Desktop Widget</description>
         <language>en</language>
         <item>
-            <title>Version 1.0.5</title>
-            <pubDate>Thu, 30 Oct 2025 16:30:00 +1300</pubDate>
-            <sparkle:version>1.0.5</sparkle:version>
-            <sparkle:shortVersionString>1.0.5</sparkle:shortVersionString>
+            <title>Version 1.0.6</title>
+            <pubDate>Thu, 30 Oct 2025 18:00:00 +1300</pubDate>
+            <sparkle:version>1.0.6</sparkle:version>
+            <sparkle:shortVersionString>1.0.6</sparkle:shortVersionString>
             <link>https://github.com/chris-riddell/WigiAI</link>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <enclosure 
-                url="https://github.com/chris-riddell/WigiAI/releases/download/v1.0.5/WigiAI-1.0.5.dmg" 
-                sparkle:version="1.0.5" 
-                sparkle:shortVersionString="1.0.5" 
+            <enclosure
+                url="https://github.com/chris-riddell/WigiAI/releases/download/v1.0.6/WigiAI-1.0.6.dmg"
+                sparkle:version="1.0.6"
+                sparkle:shortVersionString="1.0.6"
                 type="application/octet-stream"
             />
         </item>
