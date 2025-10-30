@@ -75,9 +75,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUserNoti
         // Set notification delegate
         UNUserNotificationCenter.current().delegate = self
 
-        // Initialize ReminderService to request notification permissions
+        // Initialize ActivityService to request notification permissions
         // This must happen early, before checking if there are characters
-        _ = ReminderService.shared
+        _ = ActivityService.shared
 
         // Initialize AppState (requires main actor context)
         appState = AppState()
@@ -101,8 +101,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUserNoti
             for character in appState.characters {
                 LoggerService.ui.debug("🎨 Creating widget for '\(character.name)' at position: \(NSStringFromPoint(character.position))")
                 createCharacterWidget(for: character)
-                // Schedule reminders for each character
-                ReminderService.shared.scheduleReminders(for: character)
+                // Schedule activities for each character
+                ActivityService.shared.scheduleActivities(for: character)
             }
             LoggerService.app.info("✅ All widgets created")
         }
@@ -327,7 +327,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUserNoti
                         guard let self = self else { return }
                         for character in self.appState.characters {
                             self.createCharacterWidget(for: character)
-                            ReminderService.shared.scheduleReminders(for: character)
+                            ActivityService.shared.scheduleActivities(for: character)
                         }
                     }
                 }
@@ -421,8 +421,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUserNoti
         let oldCharacter = appState.character(withId: character.id)
         appState.updateCharacter(character)
 
-        // Update reminders when character is updated
-        ReminderService.shared.scheduleReminders(for: character)
+        // Update activity notifications when character is updated
+        ActivityService.shared.scheduleActivities(for: character)
 
         // Only recreate widget if visual properties changed or explicitly requested
         if recreateWidget, let old = oldCharacter {
@@ -562,12 +562,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUserNoti
             // Show notification even when app is in foreground
             completionHandler([.banner, .sound])
 
-            // Set badge and store pending reminder
+            // Set badge and store pending activity
             if let characterIdString = notification.request.content.userInfo["characterId"] as? String,
-               let characterId = UUID(uuidString: characterIdString),
-               let reminderIdString = notification.request.content.userInfo["reminderId"] as? String,
-               let reminderId = UUID(uuidString: reminderIdString) {
-                setPendingReminder(for: characterId, reminderId: reminderId)
+               let characterId = UUID(uuidString: characterIdString) {
+                // Try activityId first (new format), fall back to reminderId (old format)
+                let activityIdString = notification.request.content.userInfo["activityId"] as? String
+                    ?? notification.request.content.userInfo["reminderId"] as? String
+                if let activityIdString = activityIdString,
+                   let activityId = UUID(uuidString: activityIdString) {
+                    setPendingActivity(for: characterId, activityId: activityId)
+                }
             }
         }
     }
@@ -579,17 +583,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUserNoti
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         Task { @MainActor in
-            // Get character ID and reminder ID from notification
+            // Get character ID and activity ID from notification
             if let characterIdString = response.notification.request.content.userInfo["characterId"] as? String,
-               let characterId = UUID(uuidString: characterIdString),
-               let reminderIdString = response.notification.request.content.userInfo["reminderId"] as? String,
-               let reminderId = UUID(uuidString: reminderIdString) {
-                setPendingReminder(for: characterId, reminderId: reminderId)
+               let characterId = UUID(uuidString: characterIdString) {
+                // Try activityId first (new format), fall back to reminderId (old format)
+                let activityIdString = response.notification.request.content.userInfo["activityId"] as? String
+                    ?? response.notification.request.content.userInfo["reminderId"] as? String
+                if let activityIdString = activityIdString,
+                   let activityId = UUID(uuidString: activityIdString) {
+                    setPendingActivity(for: characterId, activityId: activityId)
 
-                // Open chat window for this character
-                LoggerService.app.debug("📬 Notification tapped - opening chat for character ID: \(characterId)")
-                if let character = appState.character(withId: characterId) {
-                    openChatWindow(for: character)
+                    // Open chat window for this character
+                    LoggerService.app.debug("📬 Notification tapped - opening chat for character ID: \(characterId)")
+                    if let character = appState.character(withId: characterId) {
+                        openChatWindow(for: character)
+                    }
                 }
             }
 
@@ -597,11 +605,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUserNoti
         }
     }
 
-    // MARK: - Reminder & Badge Management
+    // MARK: - Activity & Badge Management
 
     @MainActor
-    func setPendingReminder(for characterId: UUID, reminderId: UUID) {
-        appState.setPendingReminder(for: characterId, reminderId: reminderId)
+    func setPendingActivity(for characterId: UUID, activityId: UUID) {
+        appState.setPendingActivity(for: characterId, activityId: activityId)
 
         // Recreate the widget to show badge
         if let character = appState.character(withId: characterId) {

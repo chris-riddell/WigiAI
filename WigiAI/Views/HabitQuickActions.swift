@@ -10,20 +10,21 @@ import OSLog
 
 struct HabitQuickActions: View {
     let character: Character
-    let onHabitAction: (Habit, HabitAction.Action) -> Void
+    let onHabitAction: (Activity, HabitAction.Action) -> Void
 
-    var pendingHabits: [Habit] {
+    var pendingActivities: [Activity] {
         let today = Date()
-        return character.habits.filter { habit in
-            habit.isEnabled &&
-            habit.isDueOn(date: today) &&
-            !habit.isCompletedOn(date: today) &&
-            !habit.isSkippedOn(date: today)
+        return character.activities.filter { activity in
+            activity.isEnabled &&
+            activity.isTrackingEnabled &&
+            activity.isDueOn(date: today) &&
+            !activity.isCompletedOn(date: today) &&
+            !activity.isSkippedOn(date: today)
         }
     }
 
     var body: some View {
-        if !pendingHabits.isEmpty {
+        if !pendingActivities.isEmpty {
             VStack(spacing: 0) {
                 Divider()
 
@@ -32,20 +33,20 @@ struct HabitQuickActions: View {
                         Image(systemName: "checkmark.circle")
                             .foregroundColor(.blue)
                             .font(.caption)
-                        Text("Pending Habits Today")
+                        Text("Pending Activities Today")
                             .font(.caption)
                             .fontWeight(.semibold)
                             .foregroundColor(.secondary)
                     }
 
-                    ForEach(pendingHabits) { habit in
+                    ForEach(pendingActivities) { activity in
                         HabitQuickActionRow(
-                            habit: habit,
+                            habit: activity,
                             onComplete: {
-                                onHabitAction(habit, .complete)
+                                onHabitAction(activity, .complete)
                             },
                             onSkip: {
-                                onHabitAction(habit, .skip)
+                                onHabitAction(activity, .skip)
                             }
                         )
                     }
@@ -59,7 +60,7 @@ struct HabitQuickActions: View {
 }
 
 struct HabitQuickActionRow: View {
-    let habit: Habit
+    let habit: Activity
     let onComplete: () -> Void
     let onSkip: () -> Void
 
@@ -70,13 +71,13 @@ struct HabitQuickActionRow: View {
     var body: some View {
         if !isHidden {
             HStack(spacing: 8) {
-                // Habit info
+                // Activity info
                 VStack(alignment: .leading, spacing: 2) {
                     Text(habit.name)
                         .font(.subheadline)
                         .fontWeight(.medium)
 
-                    Text(habit.targetDescription)
+                    Text(habit.description)
                         .font(.caption2)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
@@ -160,23 +161,25 @@ struct HabitQuickActionRow: View {
             character: Character(
                 name: "Test",
                 masterPrompt: "Test",
-                habits: [
-                    Habit(
+                activities: [
+                    Activity(
                         name: "Exercise",
-                        targetDescription: "30 minutes of cardio",
+                        description: "30 minutes of cardio",
                         frequency: .daily,
+                        isTrackingEnabled: true,
                         isEnabled: true
                     ),
-                    Habit(
+                    Activity(
                         name: "Read",
-                        targetDescription: "20 pages",
+                        description: "20 pages",
                         frequency: .daily,
+                        isTrackingEnabled: true,
                         isEnabled: true
                     )
                 ]
             ),
-            onHabitAction: { habit, action in
-                LoggerService.habits.debug("Preview action: \(String(describing: action)) for habit: \(habit.name)")
+            onHabitAction: { activity, action in
+                LoggerService.habits.debug("Preview action: \(String(describing: action)) for activity: \(activity.name)")
             }
         )
         .frame(width: 400)

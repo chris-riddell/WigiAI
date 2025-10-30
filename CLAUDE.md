@@ -50,10 +50,11 @@ A macOS native app featuring AI-powered character companions that live on your d
 ### Project Structure
 ```
 WigiAI/
-├── Models/              Character, Message, Reminder, Habit, AppSettings, CharacterTemplate, AppState
+├── Models/              Character, Message, Activity, AppSettings, CharacterTemplate, AppState
+│   └── ActivityMigration.swift  # Legacy Reminder+Habit → Activity migration
 ├── Views/               CharacterWidget, ChatWindow, SettingsWindow, CharacterLibraryView
 │   └── ViewModifiers/   WindowMoveObserver (reusable view logic)
-├── Services/            AIService, StorageService, ReminderService, VoiceSessionManager
+├── Services/            AIService, StorageService, ActivityService, VoiceSessionManager
 ├── Utilities/           Strings (centralized localization)
 ├── CharacterTemplates/  10 pre-built character JSON templates (folder reference required)
 └── Assets.xcassets/     App icons and menu bar icons
@@ -63,18 +64,24 @@ WigiAI/
 
 ### Testing
 - **131 unit tests** across 5 test suites (89%+ pass rate)
-- Coverage: HabitTests, CharacterTests, MessageTests, ReminderTests, CharacterTemplateTests
+- Coverage: ActivityTests, CharacterTests, MessageTests, CharacterTemplateTests
 - Run tests: `xcodebuild test -scheme WigiAI -destination 'platform=macOS'`
 
 ### Data Models
 - **AppState** - `@MainActor ObservableObject` centralized state container
-- **Character** - name, masterPrompt, avatarAsset, position, reminders, habits, chatHistory, persistentContext, voiceSettings
-- **Habit** - name, targetDescription, frequency, completionDates, skipDates, reminderTime
+- **Character** - name, masterPrompt, avatarAsset, position, activities[], chatHistory, persistentContext, voiceSettings
+- **Activity** - Unified reminder + habit tracking model
+  - name, description, scheduledTime (optional)
+  - isTrackingEnabled (toggle for habit features)
+  - frequency (daily, weekdays, weekends, custom, oneTime)
+  - completionDates, skipDates, currentStreak (when tracking enabled)
+  - category, icon, color (for organization)
 - **Message** - role, content, timestamp
-- **Reminder** - time, reminderText, isEnabled, linkedHabitId
-- **CharacterTemplate** - id, name, category, description, avatar, masterPrompt, habits[], reminders[]
+- **CharacterTemplate** - id, name, category, description, avatar, masterPrompt, activities[]
 - **AppSettings** - globalAPIConfig, characterIds (UUIDs only), voiceSettings, autoUpdateEnabled
 - **APIConfig** - apiURL, apiKey, model, temperature, useStreaming
+
+**Note:** Legacy `Reminder` and `Habit` models are deprecated. Old character data automatically migrates to `Activity` on first load.
 
 ## Key Technical Decisions
 
@@ -139,9 +146,53 @@ User Action → appState.updateCharacter() → StorageService.saveCharacter()
 - **ChatPanel**: Custom NSPanel (activating, resizable, non-blocking close)
 - **Position saving**: Debounced 500ms to prevent excessive disk writes
 
-## Recent Major Changes (Oct 27, 2025)
+## Recent Major Changes
 
-### Architecture Improvements
+### Activity Unification (Oct 29, 2025)
+
+**Unified Reminder + Habit → Activity model for simplicity and flexibility**
+
+**Why unify?**
+- Reminders and Habits had significant overlap (time, notifications, enablement)
+- Confusing UX: "Do I create a Reminder or a Habit?"
+- Rigid: Couldn't have reminders that track completion
+- Management overhead: Syncing reminder times with habit schedules
+
+**New Activity Model:**
+```swift
+struct Activity {
+    let id: UUID
+    var name: String               // "Morning Exercise"
+    var description: String         // "30 mins cardio"
+    var scheduledTime: Date?        // Optional notification time
+    var frequency: ActivityFrequency  // daily, weekdays, weekends, custom, oneTime
+    var isTrackingEnabled: Bool     // Toggle: simple reminder vs tracked habit
+    var completionDates: [Date]     // When tracking enabled
+    var skipDates: [Date]
+    var category: String            // For organization
+}
+```
+
+**Benefits:**
+- ✅ Single concept: "Activities" (simple to understand)
+- ✅ Flexible: Toggle tracking on/off without recreating
+- ✅ Extensible: Easy to add icons, colors, categories
+- ✅ Less code: ~40% reduction in model/service code
+- ✅ Future-proof: Easy to add goals, routines, etc.
+
+**Migration:**
+- Automatic on first load of old character files
+- Habits → Activities with `isTrackingEnabled = true`
+- Reminders → Activities with `isTrackingEnabled = false`
+- Habit-linked reminders merged with habit data
+- See `ACTIVITY_MIGRATION_GUIDE.md` for completion steps
+
+**New Services:**
+- **ActivityService** replaces ReminderService (unified scheduling)
+- **ActivityMigration** handles legacy data conversion
+- AIService updated to inject tracked activities into context
+
+### Architecture Improvements (Oct 27, 2025)
 - **AppState refactoring**: Separated state management from app lifecycle
 - **Multi-file storage**: Individual character files for scalability
 - **Context update overhaul**: Background debounced updates (5 min/5 messages)

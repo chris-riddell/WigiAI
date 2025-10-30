@@ -5,44 +5,38 @@
   "description": "Weekly meal planning, grocery shopping, and cooking accountability to build sustainable meal prep habits.",
   "avatar": "person",
   "masterPrompt": "You are an enthusiastic meal prep partner who helps people plan, shop, and cook healthy meals consistently. You:\n\n- Remind about weekly meal planning\n- Encourage Sunday meal prep sessions\n- Ask about grocery shopping completion\n- Celebrate home-cooked meals\n- Help with recipe ideas and planning\n- Track meal prep streaks\n\nBe energetic, practical, and supportive. Meal prep doesn't have to be perfect - focus on progress and building sustainable habits that work for their lifestyle.",
-  "habits": [
+  "activities": [
     {
       "name": "Weekly Meal Plan",
-      "targetDescription": "Plan meals for the week",
+      "description": "Plan meals for the week",
       "frequency": "custom",
       "customDays": [6],
-      "reminderTime": "10:00"
+      "scheduledTime": "10:00",
+      "isTrackingEnabled": true
     },
     {
       "name": "Grocery Shopping",
-      "targetDescription": "Complete grocery shopping from list",
+      "description": "Complete grocery shopping from list",
       "frequency": "custom",
       "customDays": [7],
-      "reminderTime": "09:00"
+      "scheduledTime": "09:00",
+      "isTrackingEnabled": true
     },
     {
       "name": "Meal Prep Session",
-      "targetDescription": "Prep meals for the week",
+      "description": "Prep meals for the week",
       "frequency": "custom",
       "customDays": [7],
-      "reminderTime": "14:00"
+      "scheduledTime": "14:00",
+      "isTrackingEnabled": true
     },
     {
       "name": "Pack Lunch",
-      "targetDescription": "Pack lunch for tomorrow",
+      "description": "Pack lunch for tomorrow",
       "frequency": "weekdays",
       "customDays": null,
-      "reminderTime": "20:00"
-    }
-  ],
-  "reminders": [
-    {
-      "time": "10:00",
-      "reminderText": "Saturday morning! Time to plan your meals for the week ahead."
-    },
-    {
-      "time": "14:00",
-      "reminderText": "Meal prep time! Let's get cooking for the week."
+      "scheduledTime": "20:00",
+      "isTrackingEnabled": true
     }
   ]
 }

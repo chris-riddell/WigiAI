@@ -12,8 +12,8 @@ struct HabitProgressView: View {
     let onClose: () -> Void
     @State private var refreshTrigger = false
 
-    var activeHabits: [Habit] {
-        character.habits.filter { $0.isEnabled }
+    var activeActivities: [Activity] {
+        character.activities.filter { $0.isEnabled && $0.isTrackingEnabled }
     }
 
     func refreshView() {
@@ -43,18 +43,18 @@ struct HabitProgressView: View {
             Divider()
 
             // Content
-            if activeHabits.isEmpty {
+            if activeActivities.isEmpty {
                 // Empty state
                 VStack(spacing: 16) {
                     Image(systemName: "chart.bar")
                         .font(.system(size: 50))
                         .foregroundColor(.secondary.opacity(0.5))
 
-                    Text("No Active Habits")
+                    Text("No Tracked Activities")
                         .font(.title3)
                         .foregroundColor(.secondary)
 
-                    Text("Add habits in Character Settings to start tracking")
+                    Text("Add tracked activities in Character Settings")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -64,10 +64,10 @@ struct HabitProgressView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        ForEach(character.habits.indices, id: \.self) { index in
-                            if character.habits[index].isEnabled {
-                                HabitProgressRow(habit: $character.habits[index], onRefresh: refreshView)
-                                    .id("\(character.habits[index].id)-\(refreshTrigger)")
+                        ForEach(character.activities.indices, id: \.self) { index in
+                            if character.activities[index].isEnabled && character.activities[index].isTrackingEnabled {
+                                HabitProgressRow(habit: $character.activities[index], onRefresh: refreshView)
+                                    .id("\(character.activities[index].id)-\(refreshTrigger)")
                             }
                         }
                     }
@@ -80,10 +80,10 @@ struct HabitProgressView: View {
     }
 }
 
-// MARK: - Habit Progress Row
+// MARK: - Activity Progress Row
 
 struct HabitProgressRow: View {
-    @Binding var habit: Habit
+    @Binding var habit: Activity
     let onRefresh: () -> Void
     @State private var weekOffset: Int = 0
 
@@ -130,7 +130,7 @@ struct HabitProgressRow: View {
                     Text(habit.name)
                         .font(.headline)
 
-                    Text(habit.targetDescription)
+                    Text(habit.description)
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
@@ -222,7 +222,7 @@ struct HabitProgressRow: View {
 // MARK: - Day Square
 
 struct DaySquare: View {
-    @Binding var habit: Habit
+    @Binding var habit: Activity
     let date: Date
     let onRefresh: () -> Void
     @State private var updateTrigger = false
@@ -383,21 +383,23 @@ struct DaySquare: View {
         @State private var character = Character(
             name: "Test",
             masterPrompt: "Test",
-            habits: [
-                Habit(
+            activities: [
+                Activity(
                     name: "Exercise",
-                    targetDescription: "30 minutes of cardio",
+                    description: "30 minutes of cardio",
                     frequency: .daily,
-                    isEnabled: true,
+                    isTrackingEnabled: true,
                     completionDates: [
                         Calendar.current.date(byAdding: .day, value: -1, to: Date())!,
                         Calendar.current.date(byAdding: .day, value: -2, to: Date())!
-                    ]
+                    ],
+                    isEnabled: true
                 ),
-                Habit(
+                Activity(
                     name: "Read",
-                    targetDescription: "20 pages",
+                    description: "20 pages",
                     frequency: .daily,
+                    isTrackingEnabled: true,
                     isEnabled: true
                 )
             ]

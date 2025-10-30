@@ -452,9 +452,9 @@ Example 3 (open-ended - NO suggestions):
 (No suggestions here - letting them speak freely)
 """
 
-        // Add habit tracking instructions if character has active habits
-        let activeHabits = character.habits.filter { $0.isEnabled }
-        if !activeHabits.isEmpty {
+        // Add habit tracking instructions if character has tracked activities
+        let trackedActivities = character.activities.filter { $0.isTrackingEnabled && $0.isEnabled }
+        if !trackedActivities.isEmpty {
             systemPrompt += """
 
 
@@ -467,8 +467,8 @@ You have access to a habit tracking system. The user has configured habits they 
 - Don't assume they've done it - ask if they've completed it or if they're planning to
 
 To mark a habit as complete or skipped, respond with a structured format:
-- [HABIT_COMPLETE: habit-uuid] - Mark habit as completed for today
-- [HABIT_SKIP: habit-uuid] - Mark habit as skipped for today
+- [HABIT_COMPLETE: activity-uuid] - Mark activity as completed for today
+- [HABIT_SKIP: activity-uuid] - Mark activity as skipped for today
 
 Guidelines:
 - Check the HABIT TRACKING STATUS in your context to see which habits are pending today
@@ -499,8 +499,8 @@ You: "Hey! I see you haven't logged your meditation yet today. Have you had a ch
             contextContent = "Here's what I know about our relationship and your goals:\n\n\(character.persistentContext)"
         }
 
-        // Add habit tracking status if there are active habits
-        if !activeHabits.isEmpty {
+        // Add habit tracking status if there are tracked activities
+        if !trackedActivities.isEmpty {
             if !contextContent.isEmpty {
                 contextContent += "\n\n"
             }
@@ -509,22 +509,22 @@ You: "Hey! I see you haven't logged your meditation yet today. Have you had a ch
             let calendar = Calendar.current
             let today = Date()
 
-            for habit in activeHabits {
+            for activity in trackedActivities {
                 let status: String
 
-                if habit.isCompletedOn(date: today) {
+                if activity.isCompletedOn(date: today) {
                     status = "✅ Completed today"
-                } else if habit.isSkippedOn(date: today) {
+                } else if activity.isSkippedOn(date: today) {
                     status = "⏭️ Skipped today"
-                } else if habit.isDueOn(date: today) {
+                } else if activity.isDueOn(date: today) {
                     status = "⏳ Pending (due today) - ASK ABOUT THIS!"
                 } else {
                     status = "Not due today"
                 }
 
-                var habitInfo = "• \(habit.name): \(habit.targetDescription) - \(status)"
-                if habit.currentStreak > 0 {
-                    habitInfo += " (🔥 \(habit.currentStreak) day streak)"
+                var habitInfo = "• \(activity.name): \(activity.description) - \(status)"
+                if activity.currentStreak > 0 {
+                    habitInfo += " (🔥 \(activity.currentStreak) day streak)"
                 }
 
                 // Add last 7 days history for context
@@ -532,11 +532,11 @@ You: "Hey! I see you haven't logged your meditation yet today. Have you had a ch
                 var historySymbols: [String] = []
                 for dayOffset in (0..<7).reversed() {
                     if let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) {
-                        if habit.isCompletedOn(date: date) {
+                        if activity.isCompletedOn(date: date) {
                             historySymbols.append("✅")
-                        } else if habit.isSkippedOn(date: date) {
+                        } else if activity.isSkippedOn(date: date) {
                             historySymbols.append("⏭")
-                        } else if habit.isDueOn(date: date) {
+                        } else if activity.isDueOn(date: date) {
                             historySymbols.append("⬜")
                         } else {
                             historySymbols.append("·")
@@ -546,7 +546,7 @@ You: "Hey! I see you haven't logged your meditation yet today. Have you had a ch
                 habitInfo += historySymbols.joined(separator: " ")
                 habitInfo += " (✅=done, ⏭=skipped, ⬜=missed, ·=not due)"
 
-                habitInfo += "\n  UUID: \(habit.id.uuidString)"
+                habitInfo += "\n  UUID: \(activity.id.uuidString)"
 
                 contextContent += "\n\(habitInfo)"
             }

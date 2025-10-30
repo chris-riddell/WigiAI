@@ -321,7 +321,7 @@ struct CharactersTab: View {
             }
         } message: {
             if let character = selectedCharacter {
-                Text("Are you sure you want to delete '\(character.name)'? This will remove the character, all chat history, habits, and reminders. This action cannot be undone.")
+                Text("Are you sure you want to delete '\(character.name)'? This will remove the character, all chat history, and activities. This action cannot be undone.")
             }
         }
     }
@@ -371,10 +371,9 @@ struct CharactersTab: View {
 
 struct CharacterEditor: View {
     @Binding var character: Character
-    @State private var showingReminderSheet = false
-    @State private var editingReminder: Reminder? = nil
-    @State private var showingHabitSheet = false
-    @State private var editingHabit: Habit? = nil
+    @State private var showingActivitySheet = false
+    @State private var editingActivity: Activity? = nil
+    @State private var activityToDelete: Activity? = nil
     @ObservedObject private var voiceService = VoiceService.shared
     @EnvironmentObject var appState: AppState
     var appDelegate: AppDelegate
@@ -484,14 +483,14 @@ struct CharacterEditor: View {
                     .padding(16)
                 }
 
-                // Reminders
+                // Activities (unified reminders + habits)
                 GroupBox {
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
-                            Image(systemName: "bell.badge.fill")
-                                .foregroundColor(.orange)
+                            Image(systemName: "calendar.badge.clock")
+                                .foregroundColor(.blue)
                                 .font(.title3)
-                            Text("Reminders")
+                            Text("Activities")
                                 .font(.headline)
                             Spacer()
                             Text("Optional")
@@ -506,152 +505,46 @@ struct CharacterEditor: View {
                         Divider()
 
                         VStack(alignment: .leading, spacing: 12) {
-                            if character.reminders.isEmpty {
+                            if character.activities.isEmpty {
                                 HStack {
-                                    Image(systemName: "bell.slash")
+                                    Image(systemName: "calendar.badge.clock")
                                         .foregroundColor(.secondary)
-                                    Text("No reminders configured")
+                                    Text("No activities configured")
                                         .foregroundColor(.secondary)
                                         .font(.subheadline)
                                 }
                                 .padding(.vertical, 8)
                             } else {
-                                ForEach(character.reminders) { reminder in
-                                    HStack(spacing: 12) {
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text(reminder.time, style: .time)
-                                                .font(.headline)
-                                            Text(reminder.reminderText)
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                                .lineLimit(2)
-
-                                            // Show badge if linked to habit
-                                            if let habitId = reminder.linkedHabitId,
-                                               let habit = character.habits.first(where: { $0.id == habitId }) {
-                                                HStack(spacing: 4) {
-                                                    Image(systemName: "figure.run")
-                                                        .font(.caption2)
-                                                    Text("Linked to habit: \(habit.name)")
-                                                        .font(.caption2)
-                                                }
-                                                .foregroundColor(.blue)
-                                                .padding(.top, 2)
-                                            }
-                                        }
-
-                                        Spacer()
-
-                                        Toggle("", isOn: Binding(
-                                            get: { reminder.isEnabled },
-                                            set: { newValue in
-                                                if let index = character.reminders.firstIndex(where: { $0.id == reminder.id }) {
-                                                    character.reminders[index].isEnabled = newValue
-                                                }
-                                            }
-                                        ))
-                                        .labelsHidden()
-                                        .disabled(reminder.linkedHabitId != nil)  // Can't toggle habit reminders directly
-
-                                        // Only show delete button for non-habit reminders
-                                        if reminder.linkedHabitId == nil {
-                                            Button(action: {
-                                                withAnimation {
-                                                    character.reminders.removeAll { $0.id == reminder.id }
-                                                }
-                                            }) {
-                                                Image(systemName: "trash")
-                                                    .foregroundColor(.red)
-                                                    .font(.system(size: 14))
-                                            }
-                                            .buttonStyle(.borderless)
-                                        } else {
-                                            // Show info icon for habit reminders
-                                            Image(systemName: "info.circle")
-                                                .foregroundColor(.blue)
-                                                .font(.system(size: 14))
-                                                .help("Edit this reminder in the Habits section")
-                                        }
-                                    }
-                                    .padding(12)
-                                    .background(Color(NSColor.controlBackgroundColor))
-                                    .cornerRadius(8)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        // Prevent editing habit-linked reminders directly
-                                        if reminder.linkedHabitId == nil {
-                                            editingReminder = reminder
-                                            showingReminderSheet = true
-                                        }
-                                    }
-                                }
-                            }
-
-                            Button(action: {
-                                editingReminder = nil
-                                showingReminderSheet = true
-                            }) {
-                                Label("Add Reminder", systemImage: "plus.circle.fill")
-                                    .font(.subheadline)
-                            }
-                            .buttonStyle(.borderedProminent)
-                        }
-                    }
-                    .padding(16)
-                }
-
-                // Habits
-                GroupBox {
-                    VStack(alignment: .leading, spacing: 16) {
-                        HStack {
-                            Image(systemName: "chart.line.uptrend.xyaxis")
-                                .foregroundColor(.blue)
-                                .font(.title3)
-                            Text("Habit Tracking")
-                                .font(.headline)
-                            Spacer()
-                            HStack(spacing: 4) {
-                                Text("EXPERIMENTAL")
-                                    .font(.caption2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.orange)
-                                Text("• Optional")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(Color.orange.opacity(0.15))
-                            .cornerRadius(4)
-                        }
-
-                        Divider()
-
-                        VStack(alignment: .leading, spacing: 12) {
-                            if character.habits.isEmpty {
-                                HStack {
-                                    Image(systemName: "chart.bar")
-                                        .foregroundColor(.secondary)
-                                    Text("No habits configured")
-                                        .foregroundColor(.secondary)
-                                        .font(.subheadline)
-                                }
-                                .padding(.vertical, 8)
-                            } else {
-                                ForEach(character.habits) { habit in
+                                ForEach(character.activities) { activity in
                                     HStack(spacing: 12) {
                                         VStack(alignment: .leading, spacing: 4) {
                                             HStack {
-                                                Text(habit.name)
+                                                Text(activity.name)
                                                     .font(.headline)
 
-                                                // Streak badge
-                                                if habit.currentStreak > 0 {
+                                                // Tracking badge
+                                                if activity.isTrackingEnabled {
+                                                    HStack(spacing: 2) {
+                                                        Image(systemName: "chart.line.uptrend.xyaxis")
+                                                            .font(.caption2)
+                                                            .foregroundColor(.blue)
+                                                        Text("Tracked")
+                                                            .font(.caption2)
+                                                            .fontWeight(.semibold)
+                                                    }
+                                                    .padding(.horizontal, 6)
+                                                    .padding(.vertical, 2)
+                                                    .background(Color.blue.opacity(0.15))
+                                                    .cornerRadius(4)
+                                                }
+
+                                                // Streak badge (only for tracked activities)
+                                                if activity.isTrackingEnabled && activity.currentStreak > 0 {
                                                     HStack(spacing: 2) {
                                                         Image(systemName: "flame.fill")
                                                             .font(.caption2)
                                                             .foregroundColor(.orange)
-                                                        Text("\(habit.currentStreak)")
+                                                        Text("\(activity.currentStreak)")
                                                             .font(.caption)
                                                             .fontWeight(.semibold)
                                                     }
@@ -662,35 +555,42 @@ struct CharacterEditor: View {
                                                 }
                                             }
 
-                                            Text(habit.targetDescription)
+                                            Text(activity.description)
                                                 .font(.caption)
                                                 .foregroundColor(.secondary)
-                                            Text(habit.frequency.rawValue)
-                                                .font(.caption2)
-                                                .foregroundColor(.secondary)
+                                                .lineLimit(2)
+
+                                            HStack(spacing: 8) {
+                                                Text(activity.frequency.displayName)
+                                                    .font(.caption2)
+                                                    .foregroundColor(.secondary)
+
+                                                if let scheduledTime = activity.scheduledTime {
+                                                    HStack(spacing: 2) {
+                                                        Image(systemName: "bell.fill")
+                                                            .font(.caption2)
+                                                        Text(scheduledTime, style: .time)
+                                                            .font(.caption2)
+                                                    }
+                                                    .foregroundColor(.orange)
+                                                }
+                                            }
                                         }
 
                                         Spacer()
 
                                         Toggle("", isOn: Binding(
-                                            get: { habit.isEnabled },
+                                            get: { activity.isEnabled },
                                             set: { newValue in
-                                                if let index = character.habits.firstIndex(where: { $0.id == habit.id }) {
-                                                    character.habits[index].isEnabled = newValue
+                                                if let index = character.activities.firstIndex(where: { $0.id == activity.id }) {
+                                                    character.activities[index].isEnabled = newValue
                                                 }
                                             }
                                         ))
                                         .labelsHidden()
 
                                         Button(action: {
-                                            withAnimation {
-                                                // Cancel habit reminder before removing
-                                                ReminderService.shared.cancelHabitReminder(habitId: habit.id, characterId: character.id)
-                                                // Remove linked reminder from reminders list
-                                                character.reminders.removeAll { $0.linkedHabitId == habit.id }
-                                                // Remove habit
-                                                character.habits.removeAll { $0.id == habit.id }
-                                            }
+                                            activityToDelete = activity
                                         }) {
                                             Image(systemName: "trash")
                                                 .foregroundColor(.red)
@@ -703,17 +603,17 @@ struct CharacterEditor: View {
                                     .cornerRadius(8)
                                     .contentShape(Rectangle())
                                     .onTapGesture {
-                                        editingHabit = habit
-                                        showingHabitSheet = true
+                                        editingActivity = activity
+                                        showingActivitySheet = true
                                     }
                                 }
                             }
 
                             Button(action: {
-                                editingHabit = nil
-                                showingHabitSheet = true
+                                editingActivity = nil
+                                showingActivitySheet = true
                             }) {
-                                Label("Add Habit", systemImage: "plus.circle.fill")
+                                Label("Add Activity", systemImage: "plus.circle.fill")
                                     .font(.subheadline)
                             }
                             .buttonStyle(.borderedProminent)
@@ -921,221 +821,169 @@ struct CharacterEditor: View {
             .frame(minWidth: 350)  // Ensure content has minimum width
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)  // Fill available space
-        .sheet(isPresented: $showingReminderSheet) {
-            ReminderEditorSheet(
+        .sheet(isPresented: $showingActivitySheet) {
+            ActivityEditorSheet(
                 character: $character,
-                isPresented: $showingReminderSheet,
-                editingReminder: editingReminder
+                isPresented: $showingActivitySheet,
+                editingActivity: editingActivity
             )
         }
-        .sheet(isPresented: $showingHabitSheet) {
-            HabitEditorSheet(
-                character: $character,
-                isPresented: $showingHabitSheet,
-                editingHabit: editingHabit
-            )
+        .alert("Delete Activity", isPresented: Binding(
+            get: { activityToDelete != nil },
+            set: { if !$0 { activityToDelete = nil } }
+        )) {
+            Button("Cancel", role: .cancel) {
+                activityToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let activity = activityToDelete {
+                    withAnimation {
+                        character.activities.removeAll { $0.id == activity.id }
+                    }
+                    activityToDelete = nil
+                }
+            }
+        } message: {
+            if let activity = activityToDelete {
+                Text("Are you sure you want to delete '\(activity.name)'? This will remove all tracking history for this activity.")
+            }
         }
     }
 }
 
-// MARK: - Reminder Editor Sheet
+// MARK: - Activity Editor Sheet
 
-struct ReminderEditorSheet: View {
+struct ActivityEditorSheet: View {
     @Binding var character: Character
     @Binding var isPresented: Bool
-    let editingReminder: Reminder?
-
-    @State private var time = Date()
-    @State private var reminderText = "Time for your daily check-in!"
-
-    init(character: Binding<Character>, isPresented: Binding<Bool>, editingReminder: Reminder?) {
-        _character = character
-        _isPresented = isPresented
-        self.editingReminder = editingReminder
-
-        // Initialize state with editing reminder if available
-        if let reminder = editingReminder {
-            _time = State(initialValue: reminder.time)
-            _reminderText = State(initialValue: reminder.reminderText)
-        }
-    }
-
-    var body: some View {
-        VStack(spacing: 20) {
-            Text(editingReminder == nil ? "Add Reminder" : "Edit Reminder")
-                .font(.headline)
-
-            Form {
-                DatePicker("Time", selection: $time, displayedComponents: .hourAndMinute)
-
-                VStack(alignment: .leading) {
-                    Text("Reminder Message")
-                        .font(.subheadline)
-                    TextEditor(text: $reminderText)
-                        .frame(height: 80)
-                        .font(.body)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                        )
-                }
-            }
-            .padding()
-
-            HStack {
-                Button("Cancel") {
-                    isPresented = false
-                }
-                .keyboardShortcut(.escape)
-
-                Spacer()
-
-                Button(editingReminder == nil ? "Add" : "Save") {
-                    saveReminder()
-                }
-                .keyboardShortcut(.return)
-            }
-            .padding()
-        }
-        .frame(width: 400, height: 300)
-        .padding()
-    }
-
-    private func saveReminder() {
-        var updatedCharacter = character
-
-        if let editingReminder = editingReminder {
-            // Edit existing reminder
-            if let index = updatedCharacter.reminders.firstIndex(where: { $0.id == editingReminder.id }) {
-                updatedCharacter.reminders[index].time = time
-                updatedCharacter.reminders[index].reminderText = reminderText
-            }
-        } else {
-            // Add new reminder
-            let newReminder = Reminder(
-                time: time,
-                reminderText: reminderText,
-                isEnabled: true
-            )
-            updatedCharacter.reminders.append(newReminder)
-        }
-
-        // Update the binding
-        character = updatedCharacter
-
-        isPresented = false
-    }
-}
-
-// MARK: - Habit Editor Sheet
-
-struct HabitEditorSheet: View {
-    @Binding var character: Character
-    @Binding var isPresented: Bool
-    let editingHabit: Habit?
+    let editingActivity: Activity?
 
     @State private var name = ""
-    @State private var targetDescription = ""
-    @State private var frequency: HabitFrequency = .daily
+    @State private var description = ""
+    @State private var frequency: ActivityFrequency = .daily
     @State private var customDays: Set<Int> = []
-    @State private var hasReminder = false
-    @State private var reminderTime = Date()
+    @State private var hasNotification = false
+    @State private var scheduledTime = Date()
+    @State private var isTrackingEnabled = false
 
-    init(character: Binding<Character>, isPresented: Binding<Bool>, editingHabit: Habit?) {
+    init(character: Binding<Character>, isPresented: Binding<Bool>, editingActivity: Activity?) {
         _character = character
         _isPresented = isPresented
-        self.editingHabit = editingHabit
+        self.editingActivity = editingActivity
 
-        // Initialize state with editing habit if available
-        if let habit = editingHabit {
-            _name = State(initialValue: habit.name)
-            _targetDescription = State(initialValue: habit.targetDescription)
-            _frequency = State(initialValue: habit.frequency)
-            _customDays = State(initialValue: habit.customDays ?? [])
-            _hasReminder = State(initialValue: habit.reminderTime != nil)
-            _reminderTime = State(initialValue: habit.reminderTime ?? Date())
+        // Initialize state with editing activity if available
+        if let activity = editingActivity {
+            _name = State(initialValue: activity.name)
+            _description = State(initialValue: activity.description)
+            _frequency = State(initialValue: activity.frequency)
+            _customDays = State(initialValue: activity.customDays ?? [])
+            _hasNotification = State(initialValue: activity.scheduledTime != nil)
+            _scheduledTime = State(initialValue: activity.scheduledTime ?? Date())
+            _isTrackingEnabled = State(initialValue: activity.isTrackingEnabled)
         }
     }
 
     var body: some View {
-        VStack(spacing: 20) {
-            Text(editingHabit == nil ? "Add Habit" : "Edit Habit")
+        VStack(spacing: 0) {
+            // Header
+            Text(editingActivity == nil ? "Add Activity" : "Edit Activity")
                 .font(.headline)
+                .padding()
 
-            Form {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Habit Name")
-                        .font(.subheadline)
-                    TextField("e.g., Exercise, Read, Meditate", text: $name)
-                        .textFieldStyle(.roundedBorder)
-                }
+            Divider()
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Target Description")
-                        .font(.subheadline)
-                    TextEditor(text: $targetDescription)
-                        .frame(height: 60)
-                        .font(.body)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                        )
-                    Text("e.g., '30 minutes of cardio' or 'Read 20 pages'")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Frequency")
-                        .font(.subheadline)
-                    Picker("Frequency", selection: $frequency) {
-                        ForEach(HabitFrequency.allCases, id: \.self) { freq in
-                            Text(freq.rawValue).tag(freq)
-                        }
+            // Scrollable content
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Activity Name")
+                            .font(.subheadline)
+                        TextField("e.g., Exercise, Read, Daily Check-in", text: $name)
+                            .textFieldStyle(.roundedBorder)
                     }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
 
-                    if frequency == .custom {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Select Days")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Description")
+                            .font(.subheadline)
+                        TextEditor(text: $description)
+                            .frame(height: 60)
+                            .font(.body)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                            )
+                        Text("e.g., '30 minutes of cardio'")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
 
-                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], spacing: 8) {
-                                DayToggle(dayNumber: 1, dayName: "Sun", customDays: $customDays)
-                                DayToggle(dayNumber: 2, dayName: "Mon", customDays: $customDays)
-                                DayToggle(dayNumber: 3, dayName: "Tue", customDays: $customDays)
-                                DayToggle(dayNumber: 4, dayName: "Wed", customDays: $customDays)
-                                DayToggle(dayNumber: 5, dayName: "Thu", customDays: $customDays)
-                                DayToggle(dayNumber: 6, dayName: "Fri", customDays: $customDays)
-                                DayToggle(dayNumber: 7, dayName: "Sat", customDays: $customDays)
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Toggle("Enable Progress Tracking", isOn: $isTrackingEnabled)
+                            .font(.subheadline)
+                        Text(isTrackingEnabled ? "Tracks completions, streaks, and shows in progress view" : "Simple reminder without tracking")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Frequency")
+                            .font(.subheadline)
+                        Picker("Frequency", selection: $frequency) {
+                            ForEach(ActivityFrequency.allCases, id: \.self) { freq in
+                                Text(freq.displayName).tag(freq)
                             }
                         }
-                        .padding(.top, 8)
-                        .transition(.opacity.combined(with: .move(edge: .top)))
-                    }
-                }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
 
-                Divider()
+                        if frequency == .custom {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Select Days")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Toggle("Daily Reminder", isOn: $hasReminder)
-                        .font(.subheadline)
-
-                    if hasReminder {
-                        VStack(alignment: .leading, spacing: 8) {
-                            DatePicker("Time", selection: $reminderTime, displayedComponents: .hourAndMinute)
-                            Text("I'll ask you about this habit at the specified time")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], spacing: 8) {
+                                    DayToggle(dayNumber: 1, dayName: "Sun", customDays: $customDays)
+                                    DayToggle(dayNumber: 2, dayName: "Mon", customDays: $customDays)
+                                    DayToggle(dayNumber: 3, dayName: "Tue", customDays: $customDays)
+                                    DayToggle(dayNumber: 4, dayName: "Wed", customDays: $customDays)
+                                    DayToggle(dayNumber: 5, dayName: "Thu", customDays: $customDays)
+                                    DayToggle(dayNumber: 6, dayName: "Fri", customDays: $customDays)
+                                    DayToggle(dayNumber: 7, dayName: "Sat", customDays: $customDays)
+                                }
+                            }
+                            .padding(.top, 8)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
                         }
-                        .padding(.top, 4)
-                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Toggle("Notification Reminder", isOn: $hasNotification)
+                            .font(.subheadline)
+
+                        if hasNotification {
+                            VStack(alignment: .leading, spacing: 8) {
+                                DatePicker("Time", selection: $scheduledTime, displayedComponents: .hourAndMinute)
+                                Text("Send a notification at the specified time")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.top, 4)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
                     }
                 }
+                .padding(20)
             }
-            .padding()
+
+            Divider()
 
             HStack {
                 Button("Cancel") {
@@ -1145,8 +993,8 @@ struct HabitEditorSheet: View {
 
                 Spacer()
 
-                Button(editingHabit == nil ? "Add" : "Save") {
-                    saveHabit()
+                Button(editingActivity == nil ? "Add" : "Save") {
+                    saveActivity()
                 }
                 .keyboardShortcut(.return)
                 .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty ||
@@ -1154,90 +1002,44 @@ struct HabitEditorSheet: View {
             }
             .padding()
         }
-        .frame(width: 500, height: 500)
+        .frame(width: 500, height: 550)
         .padding()
     }
 
-    private func saveHabit() {
+    private func saveActivity() {
         var updatedCharacter = character
 
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
-        let trimmedTarget = targetDescription.trimmingCharacters(in: .whitespaces)
+        let trimmedDescription = description.trimmingCharacters(in: .whitespaces)
 
-        var habitId: UUID
-        let oldReminderTime: Date?
-
-        if let editingHabit = editingHabit {
-            // Edit existing habit
-            habitId = editingHabit.id
-            oldReminderTime = editingHabit.reminderTime
-
-            if let index = updatedCharacter.habits.firstIndex(where: { $0.id == editingHabit.id }) {
-                updatedCharacter.habits[index].name = trimmedName
-                updatedCharacter.habits[index].targetDescription = trimmedTarget
-                updatedCharacter.habits[index].frequency = frequency
-                updatedCharacter.habits[index].customDays = frequency == .custom ? customDays : nil
-                updatedCharacter.habits[index].reminderTime = hasReminder ? reminderTime : nil
+        if let editingActivity = editingActivity {
+            // Edit existing activity
+            if let index = updatedCharacter.activities.firstIndex(where: { $0.id == editingActivity.id }) {
+                updatedCharacter.activities[index].name = trimmedName
+                updatedCharacter.activities[index].description = trimmedDescription
+                updatedCharacter.activities[index].frequency = frequency
+                updatedCharacter.activities[index].customDays = frequency == .custom ? customDays : nil
+                updatedCharacter.activities[index].scheduledTime = hasNotification ? scheduledTime : nil
+                updatedCharacter.activities[index].isTrackingEnabled = isTrackingEnabled
             }
         } else {
-            // Add new habit
-            let newHabit = Habit(
+            // Add new activity
+            let newActivity = Activity(
                 name: trimmedName,
-                targetDescription: trimmedTarget,
+                description: trimmedDescription,
+                scheduledTime: hasNotification ? scheduledTime : nil,
                 frequency: frequency,
                 customDays: frequency == .custom ? customDays : nil,
-                isEnabled: true,
-                reminderTime: hasReminder ? reminderTime : nil
+                isTrackingEnabled: isTrackingEnabled,
+                isEnabled: true
             )
-            habitId = newHabit.id
-            oldReminderTime = nil
-            updatedCharacter.habits.append(newHabit)
+            updatedCharacter.activities.append(newActivity)
         }
 
-        // Sync habit reminder to character.reminders array
-        syncHabitReminderToReminders(
-            character: &updatedCharacter,
-            habitId: habitId,
-            habitName: trimmedName,
-            habitTarget: trimmedTarget,
-            newReminderTime: hasReminder ? reminderTime : nil,
-            oldReminderTime: oldReminderTime
-        )
-
-        // Update the binding
+        // Update the binding (this triggers AppDelegate's updateCharacter which schedules activities)
         character = updatedCharacter
 
-        // Schedule/update habit reminders
-        ReminderService.shared.scheduleHabitReminders(for: updatedCharacter)
-
         isPresented = false
-    }
-
-    private func syncHabitReminderToReminders(
-        character: inout Character,
-        habitId: UUID,
-        habitName: String,
-        habitTarget: String,
-        newReminderTime: Date?,
-        oldReminderTime: Date?
-    ) {
-        // Remove old reminder if it exists
-        character.reminders.removeAll { $0.linkedHabitId == habitId }
-
-        // Add new reminder if habit has reminder time
-        if let reminderTime = newReminderTime {
-            let reminderText = "Time to check in! \(habitTarget)"
-            let newReminder = Reminder(
-                time: reminderTime,
-                reminderText: reminderText,
-                isEnabled: true,
-                linkedHabitId: habitId
-            )
-            character.reminders.append(newReminder)
-            LoggerService.app.debug("✅ Synced habit reminder for '\(habitName)' to reminders list")
-        } else if oldReminderTime != nil {
-            LoggerService.app.debug("🗑️ Removed habit reminder for '\(habitName)' from reminders list")
-        }
     }
 }
 
@@ -1506,7 +1308,7 @@ struct GeneralSettingsTab: View {
     var appDelegate: AppDelegate
     @ObservedObject var appState: AppState
     @State private var launchError: String?
-    @ObservedObject private var reminderService = ReminderService.shared
+    @ObservedObject private var activityService = ActivityService.shared
     @ObservedObject private var updateService = UpdateService.shared
     @ObservedObject private var voiceService = VoiceService.shared
     @State private var showVoiceDownloadAlert = false
@@ -1540,7 +1342,7 @@ struct GeneralSettingsTab: View {
                 GroupBox("Notifications") {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
-                            if reminderService.notificationPermissionGranted {
+                            if activityService.notificationPermissionGranted {
                                 Image(systemName: "checkmark.circle.fill")
                                     .foregroundColor(.green)
                                 Text("Notifications Enabled")
@@ -1554,7 +1356,7 @@ struct GeneralSettingsTab: View {
 
                             Spacer()
 
-                            if !reminderService.notificationPermissionGranted {
+                            if !activityService.notificationPermissionGranted {
                                 Button("Enable in System Settings") {
                                     if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
                                         NSWorkspace.shared.open(url)
@@ -1563,8 +1365,8 @@ struct GeneralSettingsTab: View {
                             }
                         }
 
-                        if !reminderService.notificationPermissionGranted {
-                            Text("Reminders require notification permission. Click above to open System Settings → Notifications.")
+                        if !activityService.notificationPermissionGranted {
+                            Text("Activity notifications require notification permission. Click above to open System Settings → Notifications.")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }

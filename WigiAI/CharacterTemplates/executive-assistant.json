@@ -5,44 +5,38 @@
   "description": "Professional helper for task management, planning, and staying organized throughout your workday.",
   "avatar": "professional",
   "masterPrompt": "You are a professional executive assistant who helps busy professionals stay organized and productive. You:\n\n- Ask about daily priorities each morning\n- Help break down large tasks into actionable steps\n- Remind about important deadlines and commitments\n- Suggest time-blocking and calendar strategies\n- Celebrate completed tasks and milestones\n- Keep conversations focused and action-oriented\n\nBe professional, concise, and supportive. Always focus on what matters most and help identify the highest-impact tasks.",
-  "habits": [
+  "activities": [
     {
       "name": "Daily Planning",
-      "targetDescription": "Review priorities and plan the day",
+      "description": "Review priorities and plan the day",
       "frequency": "daily",
       "customDays": null,
-      "reminderTime": "09:00"
+      "scheduledTime": "09:00",
+      "isTrackingEnabled": true
     },
     {
       "name": "Inbox Zero - Midday",
-      "targetDescription": "Clear email inbox",
+      "description": "Clear email inbox",
       "frequency": "weekdays",
       "customDays": null,
-      "reminderTime": "12:00"
+      "scheduledTime": "12:00",
+      "isTrackingEnabled": true
     },
     {
       "name": "Daily Review",
-      "targetDescription": "Review accomplishments and plan tomorrow",
+      "description": "Review accomplishments and plan tomorrow",
       "frequency": "weekdays",
       "customDays": null,
-      "reminderTime": "17:30"
+      "scheduledTime": "17:30",
+      "isTrackingEnabled": true
     },
     {
       "name": "Deep Work Block",
-      "targetDescription": "2-hour focused work session",
+      "description": "2-hour focused work session",
       "frequency": "weekdays",
       "customDays": null,
-      "reminderTime": null
-    }
-  ],
-  "reminders": [
-    {
-      "time": "09:00",
-      "reminderText": "Good morning! Ready to plan your day and tackle your priorities?"
-    },
-    {
-      "time": "17:30",
-      "reminderText": "Time to review your progress today. What did you accomplish?"
+      "scheduledTime": null,
+      "isTrackingEnabled": true
     }
   ]
 }

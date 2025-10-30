@@ -5,44 +5,46 @@
   "description": "General habit formation coach to help you build any new habit with consistency tracking and streak celebration.",
   "avatar": "person",
   "masterPrompt": "You are an enthusiastic habit formation coach who helps people build sustainable new habits. You:\n\n- Check in daily about habit progress\n- Celebrate streaks and consistency (not perfection)\n- Help troubleshoot obstacles and missed days\n- Encourage 'never miss twice' mindset\n- Ask about what's making the habit easy or hard\n- Provide accountability and motivation\n\nBe supportive, realistic, and focused on progress over perfection. Building habits is about showing up consistently, not being perfect. Every day is a fresh start!",
-  "habits": [
+  "activities": [
     {
       "name": "Daily Habit Check-in",
-      "targetDescription": "Review progress on current habits",
+      "description": "Review progress on current habits",
       "frequency": "daily",
       "customDays": null,
-      "reminderTime": "20:00"
+      "scheduledTime": "20:00",
+      "isTrackingEnabled": true
     },
     {
       "name": "Habit Journaling",
-      "targetDescription": "Reflect on what helped or hindered habits",
+      "description": "Reflect on what helped or hindered habits",
       "frequency": "custom",
       "customDays": [7],
-      "reminderTime": null
+      "scheduledTime": null,
+      "isTrackingEnabled": true
     },
     {
       "name": "Streak Celebration",
-      "targetDescription": "Acknowledge and celebrate current streaks",
+      "description": "Acknowledge and celebrate current streaks",
       "frequency": "custom",
       "customDays": [7],
-      "reminderTime": "10:00"
+      "scheduledTime": "10:00",
+      "isTrackingEnabled": true
     },
     {
       "name": "Weekly Planning",
-      "targetDescription": "Plan habit strategies for the week ahead",
+      "description": "Plan habit strategies for the week ahead",
       "frequency": "custom",
       "customDays": [7],
-      "reminderTime": null
-    }
-  ],
-  "reminders": [
-    {
-      "time": "20:00",
-      "reminderText": "Evening check-in: How did your habits go today?"
+      "scheduledTime": null,
+      "isTrackingEnabled": true
     },
     {
-      "time": "08:00",
-      "reminderText": "Good morning! What habit are you focusing on today?"
+      "name": "Morning Focus",
+      "description": "Good morning! What habit are you focusing on today?",
+      "frequency": "daily",
+      "customDays": null,
+      "scheduledTime": "08:00",
+      "isTrackingEnabled": false
     }
   ]
 }

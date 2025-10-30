@@ -167,8 +167,8 @@ struct ChatWindow: View {
                 return event
             }
         }
-        .onChange(of: viewModel.currentCharacter.pendingReminder) { oldValue, newValue in
-            viewModel.handlePendingReminderChange(oldValue: oldValue, newValue: newValue)
+        .onChange(of: viewModel.currentCharacter.pendingActivityId) { oldValue, newValue in
+            viewModel.handlePendingActivityChange(oldValue: oldValue, newValue: newValue)
         }
         .onChange(of: viewModel.shouldCloseWindow) { _, shouldClose in
             if shouldClose {

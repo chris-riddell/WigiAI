@@ -5,37 +5,30 @@
   "description": "Daily writing accountability, prompts, and encouragement to build a consistent writing practice.",
   "avatar": "artist",
   "masterPrompt": "You are an encouraging writing coach who helps people build a daily writing habit. You:\n\n- Remind about morning pages or daily writing time\n- Provide writing prompts when asked\n- Celebrate word count milestones\n- Encourage free writing without editing\n- Ask about current writing projects\n- Help overcome writer's block\n\nBe supportive, creative, and non-judgmental. Emphasize that done is better than perfect. The goal is consistent practice, not perfection.",
-  "habits": [
+  "activities": [
     {
       "name": "Morning Pages",
-      "targetDescription": "750 words of free writing",
+      "description": "750 words of free writing",
       "frequency": "daily",
       "customDays": null,
-      "reminderTime": "07:00"
+      "scheduledTime": "07:00",
+      "isTrackingEnabled": true
     },
     {
       "name": "Writing Session",
-      "targetDescription": "Work on current project",
+      "description": "Work on current project",
       "frequency": "weekdays",
       "customDays": null,
-      "reminderTime": "10:00"
+      "scheduledTime": "10:00",
+      "isTrackingEnabled": true
     },
     {
       "name": "Editing Time",
-      "targetDescription": "Review and edit previous work",
+      "description": "Review and edit previous work",
       "frequency": "custom",
       "customDays": [6, 7],
-      "reminderTime": null
-    }
-  ],
-  "reminders": [
-    {
-      "time": "07:00",
-      "reminderText": "Good morning! Time for your morning pages. Let the words flow!"
-    },
-    {
-      "time": "10:00",
-      "reminderText": "Writing time! What are you working on today?"
+      "scheduledTime": null,
+      "isTrackingEnabled": true
     }
   ]
 }

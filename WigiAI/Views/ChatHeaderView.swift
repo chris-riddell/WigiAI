@@ -47,8 +47,8 @@ struct ChatHeaderView: View {
 
             Spacer()
 
-            // Habit progress button (only show if character has active habits)
-            if !character.habits.filter({ $0.isEnabled }).isEmpty {
+            // Habit progress button (only show if character has tracked activities)
+            if !character.activities.filter({ $0.isTrackingEnabled && $0.isEnabled }).isEmpty {
                 Button(action: {
                     showingHabitProgress.toggle()
                 }) {

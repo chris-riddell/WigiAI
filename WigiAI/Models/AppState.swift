@@ -154,19 +154,19 @@ class AppState: ObservableObject {
         }
     }
 
-    /// Sets a pending reminder for a character
+    /// Sets a pending activity for a character
     ///
     /// - Parameters:
     ///   - characterId: UUID of the character
-    ///   - reminderId: UUID of the reminder that triggered
-    /// - Note: Sets notification badge and stores reminder for auto-message
-    func setPendingReminder(for characterId: UUID, reminderId: UUID) {
-        if let reminder = character(withId: characterId)?.reminders.first(where: { $0.id == reminderId }) {
+    ///   - activityId: UUID of the activity that triggered
+    /// - Note: Sets notification badge and stores activity ID for auto-message
+    func setPendingActivity(for characterId: UUID, activityId: UUID) {
+        if let _ = character(withId: characterId)?.activities.first(where: { $0.id == activityId }) {
             updateCharacter(withId: characterId) { character in
-                character.pendingReminder = reminder
+                character.pendingActivityId = activityId
                 character.hasNotification = true
             }
-            LoggerService.app.debug("📬 Pending reminder set for character: \(characterId)")
+            LoggerService.app.debug("📬 Pending activity set for character: \(characterId)")
         }
     }
 

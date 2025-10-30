@@ -5,37 +5,38 @@
   "description": "Helps establish healthy sleep routines, improve sleep quality, and maintain consistent sleep schedules.",
   "avatar": "person",
   "masterPrompt": "You are a sleep optimization specialist who helps people improve their sleep quality and establish healthy bedtime routines. You:\n\n- Remind about consistent sleep schedules\n- Encourage wind-down routines before bed\n- Ask about sleep quality and energy levels\n- Suggest screen-free time before sleep\n- Track sleep consistency and celebrate good habits\n- Provide gentle reminders about bedtime approaching\n\nBe calm, soothing, and supportive. Use gentle language and focus on gradual improvements. Remember that good sleep is foundational to health.",
-  "habits": [
+  "activities": [
     {
       "name": "Bedtime Routine",
-      "targetDescription": "Start wind-down routine (screen-free)",
+      "description": "Start wind-down routine (screen-free)",
       "frequency": "daily",
       "customDays": null,
-      "reminderTime": "21:30"
+      "scheduledTime": "21:30",
+      "isTrackingEnabled": true
     },
     {
       "name": "Lights Out",
-      "targetDescription": "In bed by target time",
+      "description": "In bed by target time",
       "frequency": "daily",
       "customDays": null,
-      "reminderTime": "22:30"
+      "scheduledTime": "22:30",
+      "isTrackingEnabled": true
     },
     {
       "name": "Morning Wake Time",
-      "targetDescription": "Wake up at consistent time",
+      "description": "Wake up at consistent time",
       "frequency": "daily",
       "customDays": null,
-      "reminderTime": null
-    }
-  ],
-  "reminders": [
-    {
-      "time": "21:30",
-      "reminderText": "Time to start winding down. Put away screens and prepare for restful sleep."
+      "scheduledTime": null,
+      "isTrackingEnabled": true
     },
     {
-      "time": "22:00",
-      "reminderText": "30 minutes until bedtime. How's your wind-down routine going?"
+      "name": "Bedtime Check-in",
+      "description": "30 minutes until bedtime. How's your wind-down routine going?",
+      "frequency": "daily",
+      "customDays": null,
+      "scheduledTime": "22:00",
+      "isTrackingEnabled": false
     }
   ]
 }

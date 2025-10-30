@@ -151,9 +151,8 @@ struct CharacterLibraryView: View {
         // Create widget
         appDelegate.createCharacterWidget(for: newCharacter)
 
-        // Schedule all reminders and habit reminders for the new character
-        ReminderService.shared.scheduleReminders(for: newCharacter)
-        ReminderService.shared.scheduleHabitReminders(for: newCharacter)
+        // Schedule all activity notifications for the new character
+        ActivityService.shared.scheduleActivities(for: newCharacter)
 
         templateToAdd = template
         showingAddConfirmation = true
@@ -248,40 +247,43 @@ struct TemplateCard: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Divider()
 
-                    // Habits
-                    if !template.habits.isEmpty {
-                        Label("\(template.habits.count) Habits", systemImage: "figure.run")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                    // Activities
+                    if !template.activities.isEmpty {
+                        let trackedCount = template.activities.filter { $0.isTrackingEnabled }.count
+                        let reminderCount = template.activities.filter { $0.scheduledTime != nil }.count
 
-                        VStack(alignment: .leading, spacing: 4) {
-                            ForEach(template.habits.indices, id: \.self) { index in
-                                HStack(spacing: 4) {
-                                    Text("•")
-                                        .foregroundColor(.secondary)
-                                    Text(template.habits[index].name)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
+                        HStack(spacing: 12) {
+                            if trackedCount > 0 {
+                                Label("\(trackedCount) Tracked", systemImage: "chart.line.uptrend.xyaxis")
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                            }
+                            if reminderCount > 0 {
+                                Label("\(reminderCount) Reminders", systemImage: "bell")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
                             }
                         }
-                        .padding(.leading, 8)
-                    }
-
-                    // Reminders
-                    if !template.reminders.isEmpty {
-                        Label("\(template.reminders.count) Reminders", systemImage: "bell")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
 
                         VStack(alignment: .leading, spacing: 4) {
-                            ForEach(template.reminders.indices, id: \.self) { index in
+                            ForEach(template.activities.indices, id: \.self) { index in
+                                let activity = template.activities[index]
                                 HStack(spacing: 4) {
                                     Text("•")
                                         .foregroundColor(.secondary)
-                                    Text(template.reminders[index].time)
-                                        .font(.caption.monospaced())
+                                    Text(activity.name)
+                                        .font(.caption)
                                         .foregroundColor(.secondary)
+                                    if activity.isTrackingEnabled {
+                                        Image(systemName: "chart.line.uptrend.xyaxis")
+                                            .font(.caption2)
+                                            .foregroundColor(.blue)
+                                    }
+                                    if activity.scheduledTime != nil {
+                                        Image(systemName: "bell.fill")
+                                            .font(.caption2)
+                                            .foregroundColor(.orange)
+                                    }
                                 }
                             }
                         }

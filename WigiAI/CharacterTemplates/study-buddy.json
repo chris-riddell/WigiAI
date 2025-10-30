@@ -5,37 +5,38 @@
   "description": "Accountability partner for learning, studying, and skill development with consistent practice.",
   "avatar": "scientist",
   "masterPrompt": "You are a supportive study buddy who helps people stay consistent with their learning goals. You:\n\n- Check in about daily study sessions\n- Ask about what topics they're learning\n- Celebrate progress and consistency\n- Encourage active recall and spaced repetition\n- Help break down learning goals into manageable chunks\n- Remind about the importance of regular practice\n\nBe encouraging, curious, and enthusiastic about learning. Ask thoughtful questions about what they're studying and celebrate the learning process, not just outcomes.",
-  "habits": [
+  "activities": [
     {
       "name": "Morning Study Session",
-      "targetDescription": "30-60 minutes of focused study",
+      "description": "30-60 minutes of focused study",
       "frequency": "daily",
       "customDays": null,
-      "reminderTime": "08:00"
+      "scheduledTime": "08:00",
+      "isTrackingEnabled": true
     },
     {
       "name": "Flashcard Review",
-      "targetDescription": "Review flashcards/Anki deck",
+      "description": "Review flashcards/Anki deck",
       "frequency": "daily",
       "customDays": null,
-      "reminderTime": null
+      "scheduledTime": null,
+      "isTrackingEnabled": true
     },
     {
       "name": "Practice Problems",
-      "targetDescription": "Work through practice problems",
+      "description": "Work through practice problems",
       "frequency": "weekdays",
       "customDays": null,
-      "reminderTime": null
-    }
-  ],
-  "reminders": [
-    {
-      "time": "08:00",
-      "reminderText": "Good morning! Ready for today's learning session?"
+      "scheduledTime": null,
+      "isTrackingEnabled": true
     },
     {
-      "time": "19:00",
-      "reminderText": "Evening check-in: How did your studying go today?"
+      "name": "Evening Check-in",
+      "description": "Evening check-in: How did your studying go today?",
+      "frequency": "daily",
+      "customDays": null,
+      "scheduledTime": "19:00",
+      "isTrackingEnabled": false
     }
   ]
 }

@@ -228,11 +228,12 @@ class ChatViewModel: ObservableObject {
             suggestedMessages = ["Hello!", "How are you?", "What can you help me with?"]
         }
 
-        // If there's a pending reminder, automatically trigger AI message
-        if let pendingReminder = currentCharacter.pendingReminder {
-            LoggerService.reminders.info("🔔 Auto-triggering AI message for pending reminder: \(pendingReminder.reminderText)")
-            triggerReminderMessage(pendingReminder)
-            updateCharacter({ $0.pendingReminder = nil }, reason: "clear pending reminder")
+        // If there's a pending activity, automatically trigger AI message
+        if let pendingActivityId = currentCharacter.pendingActivityId,
+           let activity = currentCharacter.activities.first(where: { $0.id == pendingActivityId }) {
+            LoggerService.reminders.info("🔔 Auto-triggering AI message for pending activity: \(activity.name)")
+            triggerActivityMessage(activity)
+            updateCharacter({ $0.pendingActivityId = nil }, reason: "clear pending activity")
         }
     }
 
@@ -242,12 +243,13 @@ class ChatViewModel: ObservableObject {
         voiceSessionManager.cleanup()
     }
 
-    func handlePendingReminderChange(oldValue: Reminder?, newValue: Reminder?) {
-        // Trigger reminder message when a new pending reminder is set (while window is already open)
-        if let pendingReminder = newValue, oldValue == nil {
-            LoggerService.reminders.info("🔔 Pending reminder detected while window open: \(pendingReminder.reminderText)")
-            triggerReminderMessage(pendingReminder)
-            updateCharacter({ $0.pendingReminder = nil }, reason: "clear pending reminder after trigger")
+    func handlePendingActivityChange(oldValue: UUID?, newValue: UUID?) {
+        // Trigger activity message when a new pending activity is set (while window is already open)
+        if let activityId = newValue, oldValue == nil,
+           let activity = currentCharacter.activities.first(where: { $0.id == activityId }) {
+            LoggerService.reminders.info("🔔 Pending activity detected while window open: \(activity.name)")
+            triggerActivityMessage(activity)
+            updateCharacter({ $0.pendingActivityId = nil }, reason: "clear pending activity after trigger")
         }
     }
 
@@ -413,9 +415,9 @@ class ChatViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Trigger Reminder Message
+    // MARK: - Trigger Activity Message
 
-    func triggerReminderMessage(_ reminder: Reminder) {
+    func triggerActivityMessage(_ activity: Activity) {
         errorMessage = nil
 
         // Get API config and use custom model if specified
@@ -424,11 +426,14 @@ class ChatViewModel: ObservableObject {
             config.model = customModel
         }
 
-        // Build context with reminder
+        // Build context with activity
+        let activityContext = activity.isTrackingEnabled
+            ? "It's time for: \(activity.name) - \(activity.description)"
+            : activity.name
         let messages = AIService.shared.buildContextMessages(
             for: currentCharacter,
             userMessage: "",
-            reminderContext: reminder.reminderText,
+            reminderContext: activityContext,
             messageHistoryCount: appDelegate.appState.settings.messageHistoryCount
         )
 
@@ -685,82 +690,84 @@ class ChatViewModel: ObservableObject {
         return (cleanedResponse, suggestions)
     }
 
-    // MARK: - Habit Actions
+    // MARK: - Activity Actions
 
     func processHabitActions(_ actions: [HabitAction]) {
-        LoggerService.habits.info("🎯 Processing \(actions.count) habit action(s)")
+        LoggerService.habits.info("🎯 Processing \(actions.count) activity action(s)")
 
         for action in actions {
-            // Find the habit
-            guard let habitIndex = currentCharacter.habits.firstIndex(where: { $0.id == action.habitId }) else {
-                LoggerService.habits.warning("⚠️ Habit not found with ID: \(action.habitId)")
+            // Find the activity (tracked activities only)
+            guard let activityIndex = currentCharacter.activities.firstIndex(where: {
+                $0.id == action.habitId && $0.isTrackingEnabled
+            }) else {
+                LoggerService.habits.warning("⚠️ Tracked activity not found with ID: \(action.habitId)")
                 continue
             }
 
-            var habit = currentCharacter.habits[habitIndex]
+            var activity = currentCharacter.activities[activityIndex]
 
             switch action.action {
             case .complete:
-                habit.markCompleted()
-                LoggerService.habits.info("✅ Marked habit '\(habit.name)' as completed")
+                activity.markCompleted()
+                LoggerService.habits.info("✅ Marked activity '\(activity.name)' as completed")
 
                 // Trigger celebration animation
-                triggerCelebration(for: habit)
+                triggerCelebration(for: activity)
 
             case .skip:
-                habit.markSkipped()
-                LoggerService.habits.info("⏭️ Marked habit '\(habit.name)' as skipped")
+                activity.markSkipped()
+                LoggerService.habits.info("⏭️ Marked activity '\(activity.name)' as skipped")
             }
 
-            // Update the habit in the character
+            // Update the activity in the character
             updateCharacter { character in
-                character.habits[habitIndex] = habit
+                character.activities[activityIndex] = activity
             }
         }
     }
 
-    func handleQuickHabitAction(habit: Habit, action: HabitAction.Action) {
-        LoggerService.habits.debug("⚡️ Quick action: \(String(describing: action)) for habit '\(habit.name)'")
+    func handleQuickHabitAction(habit: Activity, action: HabitAction.Action) {
+        LoggerService.habits.debug("⚡️ Quick action: \(String(describing: action)) for activity '\(habit.name)'")
 
-        // Update the habit
-        guard let habitIndex = currentCharacter.habits.firstIndex(where: { $0.id == habit.id }) else {
-            LoggerService.habits.warning("⚠️ Habit not found")
+        // Update the activity
+        guard let activityIndex = currentCharacter.activities.firstIndex(where: { $0.id == habit.id }) else {
+            LoggerService.habits.warning("⚠️ Activity not found")
             return
         }
 
-        var updatedHabit = currentCharacter.habits[habitIndex]
+        var updatedActivity = currentCharacter.activities[activityIndex]
 
         switch action {
         case .complete:
-            updatedHabit.markCompleted()
-            LoggerService.habits.info("✅ Marked habit '\(updatedHabit.name)' as completed")
+            updatedActivity.markCompleted()
+            LoggerService.habits.info("✅ Marked activity '\(updatedActivity.name)' as completed")
 
             // Trigger celebration
-            triggerCelebration(for: updatedHabit)
+            triggerCelebration(for: updatedActivity)
 
         case .skip:
-            updatedHabit.markSkipped()
-            LoggerService.habits.info("⏭️ Marked habit '\(updatedHabit.name)' as skipped")
+            updatedActivity.markSkipped()
+            LoggerService.habits.info("⏭️ Marked activity '\(updatedActivity.name)' as skipped")
             SoundEffects.shared.playMessageReceived()
         }
 
-        // Update the habit in the character
+        // Update the activity in the character
         updateCharacter { character in
-            character.habits[habitIndex] = updatedHabit
+            character.activities[activityIndex] = updatedActivity
         }
     }
 
-    func triggerCelebration(for habit: Habit) {
-        LoggerService.habits.info("🎉 Celebration! Habit completed: \(habit.name)")
-        LoggerService.habits.info("🔥 Streak: \(habit.currentStreak) days")
+    func triggerCelebration(for activity: Activity) {
+        LoggerService.habits.info("🎉 Celebration! Activity completed: \(activity.name)")
+        LoggerService.habits.info("🔥 Streak: \(activity.currentStreak) days")
 
         // Set celebration data
-        celebrationHabitName = habit.name
-        celebrationStreak = habit.currentStreak
+        celebrationHabitName = activity.name
+        celebrationStreak = activity.currentStreak
 
         // Play celebration sound
-        if habit.currentStreak == 1 || habit.currentStreak == 3 || habit.currentStreak == 7 ||
-           habit.currentStreak == 14 || habit.currentStreak == 30 || habit.currentStreak % 50 == 0 {
+        if activity.currentStreak == 1 || activity.currentStreak == 3 || activity.currentStreak == 7 ||
+           activity.currentStreak == 14 || activity.currentStreak == 30 || activity.currentStreak % 50 == 0 {
             // Milestone sound
             SoundEffects.shared.playStreakMilestone()
         } else {
