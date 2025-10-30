@@ -88,7 +88,7 @@ fi
 
 # Update version in Xcode project
 echo -e "${BLUE}📝 Updating version in Xcode project...${NC}"
-xcrun agvtool new-marketing-version "$NEW_VERSION"
+sed -i '' "s/MARKETING_VERSION = .*;/MARKETING_VERSION = ${NEW_VERSION};/" WigiAI.xcodeproj/project.pbxproj
 
 # Commit version change
 echo -e "${BLUE}💾 Committing version change...${NC}"
@@ -99,22 +99,20 @@ git commit -m "Bump version to ${NEW_VERSION}"
 echo -e "${BLUE}🏷️  Creating git tag...${NC}"
 git tag -a "v${NEW_VERSION}" -m "$MESSAGE"
 
+# Push immediately
+echo -e "${BLUE}🚀 Pushing to GitHub...${NC}"
+git push origin main
+git push origin "v${NEW_VERSION}"
+
 echo ""
-echo -e "${GREEN}✅ Version bumped to ${NEW_VERSION}${NC}"
+echo -e "${GREEN}✅ Version ${NEW_VERSION} released!${NC}"
 echo ""
-echo -e "${YELLOW}Next steps:${NC}"
-echo -e "${BLUE}1. Review the changes:${NC}"
-echo -e "   git log -1"
-echo -e "   git show v${NEW_VERSION}"
+echo -e "${BLUE}GitHub Actions is now:${NC}"
+echo -e "   • Building the DMG"
+echo -e "   • Creating GitHub release"
+echo -e "   • Generating appcast.xml automatically"
 echo ""
-echo -e "${BLUE}2. Push to GitHub to trigger release build:${NC}"
-echo -e "   git push origin main"
-echo -e "   git push origin v${NEW_VERSION}"
+echo -e "${BLUE}Monitor progress:${NC}"
+echo -e "   https://github.com/${GITHUB_USER:-chris-riddell}/${GITHUB_REPO:-WigiAI}/actions"
 echo ""
-echo -e "${BLUE}3. GitHub Actions will automatically:${NC}"
-echo -e "   - Build the app"
-echo -e "   - Create a DMG and ZIP"
-echo -e "   - Create a GitHub release"
-echo -e "   - Upload release artifacts"
-echo ""
-echo -e "${GREEN}🎉 Ready to release!${NC}"
+echo -e "${GREEN}🎉 Done!${NC}"

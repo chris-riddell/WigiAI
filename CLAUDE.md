@@ -224,14 +224,28 @@ codesign -vv /Applications/WigiAI.app            # Verify code signing
 codesign -d --entitlements - /Applications/WigiAI.app  # Check entitlements
 ```
 
-### GitHub Releases
+### GitHub Releases (Automated)
 ```bash
-./scripts/bump_version.sh patch "Bug fixes"      # Tag version
-git push origin main && git push origin --tags   # Push and trigger build
+./scripts/bump_version.sh patch "Bug fixes"      # Updates version, creates tag, and pushes
 ```
-- GitHub Actions automatically builds DMG and generates appcast.xml
+
+**What happens automatically:**
+1. Script updates `MARKETING_VERSION` in Xcode project
+2. Commits version bump
+3. Creates annotated git tag (e.g., `v1.0.7`)
+4. Pushes to GitHub
+5. GitHub Actions workflow triggers:
+   - Builds DMG with code signing
+   - Creates GitHub release
+   - Auto-generates `appcast.xml` from release metadata
+   - Pushes appcast.xml back to main branch
+6. Users receive auto-updates via Sparkle
+
+**Key Points:**
+- `MARKETING_VERSION` is the only version number that matters (user-facing)
+- `CURRENT_PROJECT_VERSION` (build number) stays at "1" - not used
+- `appcast.xml` is auto-generated from GitHub releases - don't edit manually
 - Workflow: `.github/workflows/release.yml`
-- Users receive auto-updates via Sparkle framework
 
 ## Configuration
 
