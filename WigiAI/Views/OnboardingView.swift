@@ -352,6 +352,14 @@ struct APISetupStep: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
+
+                    Divider()
+
+                    Toggle("Auto-switch to mini after 10 messages", isOn: $appState.settings.autoSwitchToMini)
+                        .font(.subheadline)
+                    Text("Automatically switch from gpt-4.1 to gpt-4.1-mini after 10 messages for cost savings")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
                 .padding()
             }

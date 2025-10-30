@@ -92,15 +92,9 @@ class UpdateService: ObservableObject {
             LoggerService.updates.debug("   Feed URL: \(updater.feedURL?.absoluteString ?? "not set")")
             LoggerService.updates.debug("   Can check: \(updater.canCheckForUpdates)")
 
-            // Start the updater manually to catch any errors
-            do {
-                try updaterController.startUpdater()
-                LoggerService.updates.info("✅ Sparkle updater started successfully")
-            } catch {
-                LoggerService.updates.warning("⚠️ Sparkle updater failed to start: \(error.localizedDescription)")
-                LoggerService.updates.debug("   This is expected during development without a feed URL")
-                // Don't show dialog - silently continue
-            }
+            // Start the updater manually
+            updaterController.startUpdater()
+            LoggerService.updates.info("✅ Sparkle updater started successfully")
         } else {
             LoggerService.updates.error("❌ UpdateService: Sparkle updater failed to initialize")
         }

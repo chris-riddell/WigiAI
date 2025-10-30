@@ -39,6 +39,11 @@ struct AppSettings: Codable {
     /// Global voice interaction settings
     var voiceSettings: VoiceSettings
 
+    /// Whether to automatically switch from gpt-4.1 to gpt-4.1-mini after 10 messages
+    ///
+    /// Default: true (cost optimization)
+    var autoSwitchToMini: Bool
+
     enum CodingKeys: String, CodingKey {
         case launchOnStartup
         case globalAPIConfig
@@ -47,6 +52,7 @@ struct AppSettings: Codable {
         case autoUpdateEnabled
         case hasCompletedOnboarding
         case voiceSettings
+        case autoSwitchToMini
     }
 
     /// Default application settings for new installations
@@ -58,11 +64,12 @@ struct AppSettings: Codable {
             messageHistoryCount: 10,
             autoUpdateEnabled: true,
             hasCompletedOnboarding: false,
-            voiceSettings: VoiceSettings()
+            voiceSettings: VoiceSettings(),
+            autoSwitchToMini: true
         )
     }
 
-    init(launchOnStartup: Bool, globalAPIConfig: APIConfig, characterIds: [UUID], messageHistoryCount: Int, autoUpdateEnabled: Bool = true, hasCompletedOnboarding: Bool = false, voiceSettings: VoiceSettings = VoiceSettings()) {
+    init(launchOnStartup: Bool, globalAPIConfig: APIConfig, characterIds: [UUID], messageHistoryCount: Int, autoUpdateEnabled: Bool = true, hasCompletedOnboarding: Bool = false, voiceSettings: VoiceSettings = VoiceSettings(), autoSwitchToMini: Bool = true) {
         self.launchOnStartup = launchOnStartup
         self.globalAPIConfig = globalAPIConfig
         self.characterIds = characterIds
@@ -70,6 +77,7 @@ struct AppSettings: Codable {
         self.autoUpdateEnabled = autoUpdateEnabled
         self.hasCompletedOnboarding = hasCompletedOnboarding
         self.voiceSettings = voiceSettings
+        self.autoSwitchToMini = autoSwitchToMini
     }
 
     init(from decoder: Decoder) throws {
@@ -81,6 +89,7 @@ struct AppSettings: Codable {
         autoUpdateEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoUpdateEnabled) ?? true
         hasCompletedOnboarding = try container.decodeIfPresent(Bool.self, forKey: .hasCompletedOnboarding) ?? false
         voiceSettings = try container.decodeIfPresent(VoiceSettings.self, forKey: .voiceSettings) ?? VoiceSettings()
+        autoSwitchToMini = try container.decodeIfPresent(Bool.self, forKey: .autoSwitchToMini) ?? true
     }
 
     func encode(to encoder: Encoder) throws {
@@ -92,6 +101,7 @@ struct AppSettings: Codable {
         try container.encode(autoUpdateEnabled, forKey: .autoUpdateEnabled)
         try container.encode(hasCompletedOnboarding, forKey: .hasCompletedOnboarding)
         try container.encode(voiceSettings, forKey: .voiceSettings)
+        try container.encode(autoSwitchToMini, forKey: .autoSwitchToMini)
     }
 }
 

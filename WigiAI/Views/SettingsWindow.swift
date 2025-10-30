@@ -1235,6 +1235,18 @@ struct APISettingsTab: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
+
+                        Divider()
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Toggle("Auto-switch to mini after 10 messages", isOn: $appState.settings.autoSwitchToMini)
+                                .onChange(of: appState.settings.autoSwitchToMini) { _ in
+                                    StorageService.shared.saveSettings(appState.settings)
+                                }
+                            Text("Automatically switch from gpt-4.1 to gpt-4.1-mini after 10 messages for cost savings")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     .padding()
                 }

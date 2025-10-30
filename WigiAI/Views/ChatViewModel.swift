@@ -151,6 +151,9 @@ class ChatViewModel: ObservableObject {
     /// - Character is using customModel "gpt-4.1" OR has no customModel and global is "gpt-4.1"
     /// - Automatically sets customModel to "gpt-4.1-mini"
     private func checkModelAutoSwitch() {
+        // Check if auto-switch is enabled
+        guard self.appDelegate.appState.settings.autoSwitchToMini else { return }
+
         let messageCount = self.currentCharacter.chatHistory.count
 
         // Only check at exactly 10 messages (after 5 exchanges)
