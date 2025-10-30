@@ -417,7 +417,20 @@ class AIService: NSObject, ObservableObject {
         var systemPrompt = character.masterPrompt
 
         // Add chat context and formatting instructions
-        systemPrompt += "\n\nCONTEXT: This is a chat window interface. Keep your responses conversational and reasonably brief where appropriate."
+        systemPrompt += """
+
+
+COMMUNICATION STYLE:
+This is a chat window interface. Be conversational and aim for brief, punchy responses that get straight to the point.
+
+However, prioritize being SMART and HELPFUL over being short:
+- If more context makes your response clearer or more useful, include it
+- Show awareness of the conversation history and the user's situation
+- Provide enough detail to demonstrate understanding and expertise
+- Don't be artificially brief when a thoughtful explanation would be better
+
+In short: Be concise by default, but never sacrifice quality, clarity, or helpfulness for brevity.
+"""
 
         // Add instructions for suggested responses (at END for recency bias)
         systemPrompt += """
