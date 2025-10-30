@@ -346,9 +346,9 @@ struct APISetupStep: View {
                         Text("Model")
                             .font(.subheadline)
                             .fontWeight(.medium)
-                        TextField("gpt-4o", text: $model)
+                        TextField("gpt-4.1", text: $model)
                             .textFieldStyle(.roundedBorder)
-                        Text("Recommended: gpt-4o for speed and cost")
+                        Text("Recommended: gpt-4.1 for best performance")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

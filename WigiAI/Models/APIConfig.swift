@@ -21,7 +21,7 @@ struct APIConfig: Codable, Equatable, Hashable {
     /// Use `actualAPIKey` to retrieve the key from Keychain.
     var apiKey: String
 
-    /// Model identifier (e.g., "gpt-4o", "gpt-3.5-turbo")
+    /// Model identifier (e.g., "gpt-4.1", "gpt-4.1-mini")
     var model: String
 
     /// Whether to use Server-Sent Events (SSE) streaming for responses
@@ -76,12 +76,12 @@ struct APIConfig: Codable, Equatable, Hashable {
         }
     }
 
-    /// Default API configuration (OpenAI with GPT-4o)
+    /// Default API configuration (OpenAI with GPT-4.1)
     static var defaultConfig: APIConfig {
         APIConfig(
             apiURL: "https://api.openai.com/v1",
             apiKey: "",
-            model: "gpt-4o",
+            model: "gpt-4.1",
             useStreaming: true,
             temperature: 0.7
         )

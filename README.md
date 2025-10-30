@@ -129,7 +129,7 @@ See [Development Setup](#-development) below.
 2. **Configure API Settings:**
    - Click menubar icon → Settings
    - Enter your OpenAI API key (or compatible API URL)
-   - Select your preferred model (default: gpt-4o)
+   - Select your preferred model (default: gpt-4.1, auto-switches to gpt-4.1-mini after 10 messages)
 
 3. **Create Your First Character:**
    - Settings → Characters → Add Character
@@ -217,9 +217,9 @@ Be playful, curious, and encourage creative thinking. Ask "what if" questions.
 ### Per-Character Model Override
 
 You can assign different AI models to different characters:
-- **Main character:** gpt-4o (recommended, high-quality responses)
-- **Budget-conscious assistant:** gpt-4o-mini (faster, cost-effective)
-- **Custom character:** Any OpenAI-compatible model
+- **New characters:** Start with gpt-4.1 (best quality), auto-switch to gpt-4.1-mini after 10 messages for cost efficiency
+- **Budget-conscious:** gpt-4.1-mini (faster, cost-effective)
+- **Custom models:** Any OpenAI-compatible model supported
 
 ### Pre-Built Character Templates
 
@@ -254,8 +254,11 @@ Browse the character library in-app to add any template with one click!
 ```
 API URL: https://api.openai.com/v1
 API Key: sk-...
-Model: gpt-4o
+Model: gpt-4.1
 ```
+
+**Smart Cost Optimization:**
+New characters automatically start with gpt-4.1 for best quality during initial interactions, then switch to gpt-4.1-mini after 10 messages (5 exchanges) for ongoing cost efficiency.
 
 **Ollama (Local):**
 ```

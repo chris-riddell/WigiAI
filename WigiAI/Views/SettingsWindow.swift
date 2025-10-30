@@ -783,7 +783,7 @@ struct CharacterEditor: View {
                                 set: { enabled in
                                     withAnimation {
                                         if enabled {
-                                            character.customModel = "gpt-4o"
+                                            character.customModel = "gpt-4.1-mini"
                                         } else {
                                             character.customModel = nil
                                         }
@@ -1195,7 +1195,7 @@ struct APISettingsTab: View {
                         VStack(alignment: .leading, spacing: 4) {
                             TextField("Model", text: $model)
                                 .onChange(of: model) { saveSettings() }
-                            Text("e.g., gpt-4o, gpt-4o-mini, gpt-4, gpt-3.5-turbo")
+                            Text("e.g., gpt-4.1, gpt-4.1-mini (auto-switches after 10 messages)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }

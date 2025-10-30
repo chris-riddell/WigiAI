@@ -139,6 +139,36 @@ class ChatViewModel: ObservableObject {
         currentCharacter.customSpeechRate ?? appDelegate.appState.settings.voiceSettings.speechRate
     }
 
+    // MARK: - Model Auto-Switch
+
+    /// Checks if character should switch from GPT-4.1 to GPT-4.1-mini after 10 messages
+    ///
+    /// This is a cost optimization: use the better model for initial interactions,
+    /// then switch to the cheaper mini model once the character is established.
+    ///
+    /// **Conditions for switch:**
+    /// - Character has exactly 10 messages (5 exchanges)
+    /// - Character is using customModel "gpt-4.1" OR has no customModel and global is "gpt-4.1"
+    /// - Automatically sets customModel to "gpt-4.1-mini"
+    private func checkModelAutoSwitch() {
+        let messageCount = currentCharacter.chatHistory.count
+
+        // Only check at exactly 10 messages (after 5 exchanges)
+        guard messageCount == 10 else { return }
+
+        // Get current effective model
+        let effectiveModel = currentCharacter.customModel ?? appDelegate.appState.settings.globalAPIConfig.model
+
+        // Only switch if currently using gpt-4.1
+        guard effectiveModel == "gpt-4.1" else { return }
+
+        // Switch to mini
+        LoggerService.ai.info("🔄 Auto-switching '\(currentCharacter.name)' from gpt-4.1 to gpt-4.1-mini after 10 messages")
+        updateCharacter { character in
+            character.customModel = "gpt-4.1-mini"
+        }
+    }
+
     // MARK: - Character Updates
 
     /// Updates the current character with validation
@@ -373,6 +403,9 @@ class ChatViewModel: ObservableObject {
                     let assistantMessage = Message(role: "assistant", content: finalResponse)
                     self.updateCharacter { $0.chatHistory.append(assistantMessage) }
 
+                    // Check if we should auto-switch to mini model
+                    self.checkModelAutoSwitch()
+
                     // Set suggested messages for next interaction
                     self.suggestedMessages = suggestions
 
@@ -473,6 +506,9 @@ class ChatViewModel: ObservableObject {
                     // Save assistant response (without suggestions or habit markers)
                     let assistantMessage = Message(role: "assistant", content: finalResponse)
                     self.updateCharacter { $0.chatHistory.append(assistantMessage) }
+
+                    // Check if we should auto-switch to mini model
+                    self.checkModelAutoSwitch()
 
                     // Set suggested messages for next interaction
                     self.suggestedMessages = suggestions
