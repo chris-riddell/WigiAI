@@ -265,6 +265,7 @@ struct MessageBubble: View {
     var showTimestamp: Bool = true
     var containerWidth: CGFloat = 400
     @State private var isHovering = false
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack(spacing: 0) {
@@ -287,8 +288,16 @@ struct MessageBubble: View {
                                     endPoint: .bottomTrailing
                                 )
                             } else {
-                                Color.clear
-                                    .background(.regularMaterial)
+                                // AI message bubble - better contrast in dark mode
+                                ZStack {
+                                    if colorScheme == .dark {
+                                        Color(nsColor: NSColor.controlBackgroundColor)
+                                            .opacity(0.8)
+                                    } else {
+                                        Color.clear
+                                    }
+                                }
+                                .background(.regularMaterial)
                             }
                         }
                     )
