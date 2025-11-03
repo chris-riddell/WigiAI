@@ -11,6 +11,7 @@ struct HabitProgressView: View {
     @Binding var character: Character
     let onClose: () -> Void
     @State private var refreshTrigger = false
+    @State private var showingAddActivity = false
 
     var activeActivities: [Activity] {
         character.activities.filter { $0.isEnabled && $0.isTrackingEnabled }
@@ -29,6 +30,15 @@ struct HabitProgressView: View {
                     .fontWeight(.semibold)
 
                 Spacer()
+
+                // Add activity button
+                Button(action: { showingAddActivity = true }) {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundColor(.blue)
+                        .font(.title3)
+                }
+                .buttonStyle(.plain)
+                .help("Add new activity")
 
                 Button(action: onClose) {
                     Image(systemName: "xmark.circle.fill")
@@ -77,6 +87,19 @@ struct HabitProgressView: View {
         }
         .frame(width: 400, height: 450)
         .background(Color(NSColor.windowBackgroundColor))
+        .sheet(isPresented: $showingAddActivity) {
+            ActivityEditorSheet(
+                character: $character,
+                isPresented: $showingAddActivity,
+                editingActivity: nil
+            )
+        }
+        .onChange(of: character.activities.count) { oldCount, newCount in
+            // Refresh view when activities are added/removed
+            if newCount > oldCount {
+                refreshView()
+            }
+        }
     }
 }
 
