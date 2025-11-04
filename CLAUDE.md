@@ -3,7 +3,7 @@
 ## Project Overview
 A macOS native app featuring AI-powered character companions that live on your desktop, providing habit tracking through conversational check-ins and proactive notifications.
 
-**Current Version:** 1.0.0 (MVP Complete - Oct 26, 2025)
+**Current Version:** 1.0.6
 **Status:** ✅ Production Ready with Auto-Updates
 
 ## Core Features
@@ -18,6 +18,7 @@ A macOS native app featuring AI-powered character companions that live on your d
 - **OpenAI-compatible APIs** - Works with OpenAI, Ollama, local servers
 - **Real-time streaming** - SSE-based with toggle option
 - **Smart context management** - Incremental updates with prompt caching (50% cost savings)
+- **Smart model switching** - Auto-switch from gpt-4.1 to gpt-4.1-mini after 10 messages (optional, respects custom models)
 - **Suggested replies** - AI-generated quick response buttons
 - **Temperature control** - Adjustable creativity (0.0-2.0, default 0.7)
 
@@ -25,6 +26,7 @@ A macOS native app featuring AI-powered character companions that live on your d
 - **Conversational tracking** - AI naturally asks about and tracks habits
 - **Flexible scheduling** - Daily, weekdays, weekends, or custom days
 - **Visual progress** - 7-day calendar with color-coded completion
+- **Quick-add from chat** - Add new activities directly from habit progress dropdown
 - **Celebrations** - Confetti animations with streak milestones
 - **Reminder notifications** - Optional per-habit reminders
 
@@ -51,7 +53,6 @@ A macOS native app featuring AI-powered character companions that live on your d
 ```
 WigiAI/
 ├── Models/              Character, Message, Activity, AppSettings, CharacterTemplate, AppState
-│   └── ActivityMigration.swift  # Legacy Reminder+Habit → Activity migration
 ├── Views/               CharacterWidget, ChatWindow, SettingsWindow, CharacterLibraryView
 │   └── ViewModifiers/   WindowMoveObserver (reusable view logic)
 ├── Services/            AIService, StorageService, ActivityService, VoiceSessionManager
@@ -78,10 +79,8 @@ WigiAI/
   - category, icon, color (for organization)
 - **Message** - role, content, timestamp
 - **CharacterTemplate** - id, name, category, description, avatar, masterPrompt, activities[]
-- **AppSettings** - globalAPIConfig, characterIds (UUIDs only), voiceSettings, autoUpdateEnabled
-- **APIConfig** - apiURL, apiKey, model, temperature, useStreaming
-
-**Note:** Legacy `Reminder` and `Habit` models are deprecated. Old character data automatically migrates to `Activity` on first load.
+- **AppSettings** - globalAPIConfig, characterIds (UUIDs only), voiceSettings, autoUpdateEnabled, autoSwitchToMini
+- **APIConfig** - apiURL, apiKey, model (default: gpt-4.1), temperature, useStreaming
 
 ## Key Technical Decisions
 
@@ -148,6 +147,34 @@ User Action → appState.updateCharacter() → StorageService.saveCharacter()
 
 ## Recent Major Changes
 
+### GPT-4.1 & UX Improvements (Oct 30, 2025)
+
+**Model Updates:**
+- Updated default model from gpt-4o to **gpt-4.1**
+- Added **auto-switch feature**: Optionally switch from gpt-4.1 to gpt-4.1-mini after 10 messages for cost savings
+  - Respects custom model settings (only applies when using global default)
+  - Configurable via toggle in Settings and Onboarding
+  - Intelligent: Waits until initial character establishment is complete
+
+**AI Context Enhancements:**
+- **Shortened communication style**: "Be conversational, brief, and punchy - but prioritize being smart and helpful over being short"
+- **Enhanced persistent context prompt**: Now captures 7 priority areas with specific guidance
+  - User's goals & intentions, patterns & preferences, current situation
+  - Progress & history, important facts, emotional context, decisions & commitments
+  - Emphasizes specificity ("Exercise 3x/week" not "Exercise regularly")
+  - Includes temporal details and motivations for deeper understanding
+
+**UI/UX Improvements:**
+- **Dark mode contrast fix**: AI message bubbles now have better visibility in dark mode
+- **Quick-add activities**: New "+" button in Habit Progress view to add activities without opening Settings
+  - Reuses ActivityEditorSheet component for consistency
+  - Streamlines workflow for creating tracked habits
+
+**Code Quality:**
+- Removed all backward compatibility code (app unreleased, no migration needed)
+- Deleted ActivityMigration.swift and deprecated properties (~522 lines removed)
+- Zero deprecation warnings
+
 ### Activity Unification (Oct 29, 2025)
 
 **Unified Reminder + Habit → Activity model for simplicity and flexibility**
@@ -180,17 +207,11 @@ struct Activity {
 - ✅ Less code: ~40% reduction in model/service code
 - ✅ Future-proof: Easy to add goals, routines, etc.
 
-**Migration:**
-- Automatic on first load of old character files
-- Habits → Activities with `isTrackingEnabled = true`
-- Reminders → Activities with `isTrackingEnabled = false`
-- Habit-linked reminders merged with habit data
-- See `ACTIVITY_MIGRATION_GUIDE.md` for completion steps
-
 **New Services:**
 - **ActivityService** replaces ReminderService (unified scheduling)
-- **ActivityMigration** handles legacy data conversion
 - AIService updated to inject tracked activities into context
+
+**Note:** Backward compatibility code was removed in v1.0.6 as app was unreleased. All characters use the unified Activity model from the start.
 
 ### Architecture Improvements (Oct 27, 2025)
 - **AppState refactoring**: Separated state management from app lifecycle
