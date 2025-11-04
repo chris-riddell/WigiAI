@@ -1,6 +1,12 @@
 # Activity Migration Completion Guide
 
-## ✅ Completed (Build Passing)
+> **⚠️ OBSOLETE (as of v1.0.6)**
+> This document is no longer relevant. The Activity migration was completed and all backward compatibility code was removed in v1.0.6.
+> The app now exclusively uses the unified Activity model. This file is kept for historical reference only.
+
+---
+
+## ✅ Migration Complete (v1.0.6)
 
 ### Core Architecture
 - [x] **Activity.swift** - Unified model combining Reminder + Habit

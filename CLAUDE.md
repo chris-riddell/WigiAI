@@ -64,23 +64,32 @@ WigiAI/
 **IMPORTANT:** The `CharacterTemplates/` folder must be added to Xcode as a folder reference (blue folder).
 
 ### Testing
-- **131 unit tests** across 5 test suites (89%+ pass rate)
-- Coverage: ActivityTests, CharacterTests, MessageTests, CharacterTemplateTests
+- **Comprehensive unit tests** across 7 test suites
+- Coverage: AIServiceTests, CharacterTemplateTests, CharacterTests, HabitTests, MessageTests, ReminderTests, StorageServiceTests
 - Run tests: `xcodebuild test -scheme WigiAI -destination 'platform=macOS'`
 
 ### Data Models
+
+**Core Models:**
 - **AppState** - `@MainActor ObservableObject` centralized state container
-- **Character** - name, masterPrompt, avatarAsset, position, activities[], chatHistory, persistentContext, voiceSettings
+- **Character** - name, masterPrompt, avatarAsset, position, activities[], chatHistory, persistentContext, voiceSettings, customModel
 - **Activity** - Unified reminder + habit tracking model
   - name, description, scheduledTime (optional)
   - isTrackingEnabled (toggle for habit features)
-  - frequency (daily, weekdays, weekends, custom, oneTime)
+  - frequency (ActivityFrequency enum)
   - completionDates, skipDates, currentStreak (when tracking enabled)
   - category, icon, color (for organization)
-- **Message** - role, content, timestamp
-- **CharacterTemplate** - id, name, category, description, avatar, masterPrompt, activities[]
+- **Message** - role ("user" | "assistant"), content, timestamp
+
+**Configuration:**
 - **AppSettings** - globalAPIConfig, characterIds (UUIDs only), voiceSettings, autoUpdateEnabled, autoSwitchToMini
 - **APIConfig** - apiURL, apiKey, model (default: gpt-4.1), temperature, useStreaming
+- **VoiceSettings** - Global and per-character voice configuration (voice name, speed, enabled state)
+- **CharacterTemplate** - id, name, category, description, avatar, masterPrompt, activities[]
+
+**Enums:**
+- **ActivityFrequency** - `.daily`, `.weekdays`, `.weekends`, `.custom([Int])`, `.oneTime`
+- **AvatarAsset** - `.person`, `.professional`, `.scientist`, `.artist`
 
 ## Key Technical Decisions
 
@@ -101,12 +110,45 @@ WigiAI/
 └── backups/                   # Automatic backups before saves
 ```
 
+### Services Architecture
+
+The app is built with a service-oriented architecture for separation of concerns:
+
+**Core Services:**
+- **AIService** - OpenAI API communication, streaming responses, context management, prompt caching
+- **StorageService** - Multi-file JSON persistence, backup/recovery, character file management
+- **ActivityService** - Unified notification scheduling for activities (reminders + habits)
+- **CharacterTemplateService** - Loads and manages 10 built-in character templates from JSON files
+
+**Voice Services:**
+- **VoiceService** - Text-to-speech with 10 premium voices, per-character voice settings
+- **VoiceSessionManager** - Speech-to-text session management, push-to-talk coordination
+
+**Utility Services:**
+- **LoggerService** - Category-based logging with emoji prefixes (chat, ai, voice, storage, habits, reminders, sound, ui, app, updates)
+- **KeychainService** - Secure API key storage in macOS Keychain (prevents keys in JSON/logs)
+- **UpdateService** - Sparkle framework integration for auto-update checks and installation
+- **SoundEffects** - System sound feedback (message sent/received, success, celebration, streak milestones)
+- **ReminderService** - Notification permission management and delegation
+
+### Utilities
+
+**Strings** - Centralized string constants and localization helpers
+- Provides consistent error messages and UI text
+- Prepared for future multi-language support
+
+**Scripts** (`/scripts/` directory)
+- `deploy.sh` - Local build and installation to /Applications
+- `bump_version.sh` - Automated version bumping, tagging, and GitHub push
+- `generate_appcast.rb` - Auto-generates appcast.xml from GitHub releases (CI only)
+- Icon generation utilities
+
 ### Context Management Strategy
 - **System prompt:** Character's master prompt (cached by OpenAI for 50% cost reduction)
 - **Persistent context:** Auto-updated summary (bullet points, incremental merge)
 - **Recent history:** Last 10 messages (configurable)
 - **Background updates:** Debounced every 5 minutes OR 5 messages (not tied to window close)
-- **Habit injection:** Separate from persistent context to preserve prompt cache
+- **Activity injection:** Separate from persistent context to preserve prompt cache
 
 ### State Management Pattern
 **Dedicated AppState class for separation of concerns:**
@@ -140,10 +182,37 @@ User Action → appState.updateCharacter() → StorageService.saveCharacter()
                             @Published triggers View updates
 ```
 
+### Views Architecture
+
+**Main Windows:**
+- **OnboardingView** - 4-step first-run experience (API setup, character creation, template library, completion)
+- **SettingsWindow** - Comprehensive settings interface with tabs for global API config, characters, activities, voice
+- **CharacterLibraryView** - Template browser with 10 pre-built character templates
+
+**Character Interaction:**
+- **CharacterWidget** - Desktop widget with avatar, animations, and click interactions
+- **ChatWindow** - Main conversation interface with message history and input
+- **ChatViewModel** - Business logic (~600+ lines): AI communication, context updates, voice coordination
+
+**Chat Components:**
+- **ChatHeaderView** - Character name, actions (habit progress, settings, clear chat)
+- **MessageListView** - Scrollable message display with animations and streaming
+- **ChatInputView** - Text input area with voice button and send functionality
+- **SuggestedRepliesView** - AI-generated quick response buttons
+
+**Activity Tracking:**
+- **HabitProgressView** - 7-day calendar visualization with quick-add button
+- **HabitQuickActions** - Pending activity buttons with complete/skip/snooze actions
+- **CelebrationView** - Confetti animations for completions and streak milestones
+- **ActivityEditorSheet** - Form for creating/editing activities (reused in Settings and quick-add)
+
+**View Modifiers:**
+- **WindowMoveObserver** - Reusable position tracking with debouncing (500ms)
+
 ### Window Architecture
 - **CharacterPanel**: Custom NSPanel (non-activating, stationary, draggable)
 - **ChatPanel**: Custom NSPanel (activating, resizable, non-blocking close)
-- **Position saving**: Debounced 500ms to prevent excessive disk writes
+- **Position saving**: Debounced 500ms to prevent excessive disk writes on drag
 
 ## Recent Major Changes
 
@@ -271,16 +340,41 @@ codesign -d --entitlements - /Applications/WigiAI.app  # Check entitlements
 ## Configuration
 
 ### Info.plist (Auto-Generated)
-- `LSUIElement = YES` - Menubar-only app
-- `NSUserNotificationsUsageDescription` - Notification permissions
-- `NSSpeechRecognitionUsageDescription` - Voice interaction
-- `NSSupportsAutomaticTermination = NO` - Stay running
-- `SUFeedURL` - Sparkle appcast URL for updates
+- `LSUIElement = YES` - Menubar-only app (no Dock icon)
+- `NSUserNotificationsUsageDescription` - Notification permissions for activity reminders
+- `NSMicrophoneUsageDescription` - Microphone access for voice-to-text conversation
+- `NSSpeechRecognitionUsageDescription` - Speech recognition for voice input
+- `NSSupportsAutomaticTermination = NO` - Keep app running in background
+- `NSSupportsSuddenTermination = NO` - Prevent abrupt termination
+- `SUFeedURL` - Sparkle appcast URL for auto-updates
+- `SUPublicEDKey` - Sparkle public key for verifying update signatures
+- `SUScheduledCheckInterval` - Auto-update check frequency (86400 = daily)
 
 ### Code Signing
 - **Local dev:** Apple Development certificate (free Apple ID)
 - **Distribution:** Apple Developer Program ($99/year) recommended
-- **Entitlements:** App sandboxing disabled (`com.apple.security.app-sandbox = false`)
+- **Entitlements:** App sandboxing disabled in `WigiAI.entitlements` (`com.apple.security.app-sandbox = false`)
+
+### Logging & Error Handling
+
+**LoggerService Architecture:**
+- Category-based logging with emoji prefixes for visual scanning
+- Categories: chat, ai, voice, storage, habits, reminders, sound, ui, app, updates
+- Privacy-aware: User content truncated to 50 characters in logs
+- API keys automatically sanitized (never logged)
+- Example: `LoggerService.ai.info("🤖 Starting AI request...")`
+
+**Error Handling Patterns:**
+- `Result<T, Error>` types for storage operations
+- Explicit error logging (no silent `try?` in production)
+- Backup/recovery system: Automatic backups before file saves
+- Corruption detection with fallback to backups
+- User-facing alerts for critical errors (API key issues, storage failures)
+
+**Security:**
+- **KeychainService**: API keys stored in macOS Keychain (not in JSON or logs)
+- Prevents accidental Git commits of secrets
+- Automatic migration from legacy JSON storage
 
 ## Known Issues
 - ⚠️ "Unable to open mach-O at path: default.metallib" warning - Harmless SwiftUI/Metal warning

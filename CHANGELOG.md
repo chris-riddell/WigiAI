@@ -4,7 +4,48 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased] - 1.1.0
+## [Unreleased]
+
+## [1.0.6] - 2024-10-30
+
+### Added
+
+**🤖 Smart Model Switching**
+- Auto-switch from gpt-4.1 to gpt-4.1-mini after 10 messages for cost savings (optional, default: enabled)
+- Respects custom model settings (only applies when using global default)
+- Configurable via toggle in Settings and Onboarding
+
+**⚡ Quick-Add Activities**
+- New "+" button in Habit Progress view to add activities without opening Settings
+- Reuses ActivityEditorSheet component for consistency
+- Streamlines workflow for habit tracking
+
+**🧠 Enhanced AI Context**
+- Shortened communication style prompt for punchier responses
+- Enhanced persistent context prompt with 7 priority areas
+- Better specificity guidance ("Exercise 3x/week" not "Exercise regularly")
+- Includes temporal details and motivations for deeper understanding
+
+### Changed
+
+**📱 UI/UX Improvements**
+- Fixed dark mode contrast for AI message bubbles (better visibility)
+- Updated default model from gpt-4o to gpt-4.1
+- All documentation updated to reference gpt-4.1
+
+**🧹 Code Quality**
+- Removed all backward compatibility code (~522 lines)
+- Deleted ActivityMigration.swift (app unreleased, no migration needed)
+- Zero deprecation warnings
+
+## [1.0.5] - 2024-10-27
+
+### Fixed
+- Fixed microphone permission handling
+- Fixed API rate limit issues with GitHub API requests
+- Now uses authenticated requests to avoid rate limiting
+
+## [1.1.0] - 2024-10-27
 
 ### Changed
 

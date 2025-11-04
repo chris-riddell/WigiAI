@@ -31,9 +31,10 @@ I built this for myself, but I'm sharing it in case it helps others too. If you 
 ### 💬 **Conversational AI Characters**
 - Multiple character companions with unique personalities
 - Real-time AI-powered conversations using OpenAI-compatible APIs
-- Persistent chat history and contextual memory
+- Persistent chat history and enhanced contextual memory
+- Smart model switching: Auto-switch from gpt-4.1 to gpt-4.1-mini after 10 messages for cost savings (optional)
 - Suggested quick replies for faster interaction
-- Model selection (GPT-4, GPT-4o-mini, or custom models)
+- Model selection (GPT-4.1, GPT-4.1-mini, or custom models)
 
 ### 🎨 **Fully Customizable Characters**
 - **Create AI companions for anything!** Define custom personalities, habits, and reminders for any use case
@@ -44,9 +45,10 @@ I built this for myself, but I'm sharing it in case it helps others too. If you 
 - Position memory (characters stay where you place them)
 - Multiple characters can be active simultaneously
 
-### 🎯 **Habit Tracking** (NEW)
+### 🎯 **Habit Tracking**
 - **Conversational AI Integration:** Characters naturally ask about and track habits
 - **Visual Progress:** 7-day calendar with color-coded completion status
+- **Quick-Add from Chat:** Create new activities directly from habit progress dropdown (no need to open Settings)
 - **Quick Actions:** Instant "Done ✓" and "Skip →" buttons for pending habits
 - **Celebration Animations:** Confetti and milestone messages for streak achievements
 - **Flexible Scheduling:** Daily, weekdays, weekends, or custom day selection
@@ -399,8 +401,9 @@ Character: "That's amazing! You've kept it up for a whole week! 🔥"
 
 - **All data stored locally** in `~/Library/Application Support/WigiAI/`
 - **No telemetry or analytics** - your conversations stay private
-- **API key stored securely** in app's sandboxed storage
+- **API keys stored in macOS Keychain** - Secure system-level storage (not in JSON files or logs)
 - **Chat history never leaves your Mac** (except API calls to your configured endpoint)
+- **Automatic backups** - App creates backups before saving to prevent data loss
 
 ### Permissions
 
@@ -444,27 +447,36 @@ WigiAI/
 │   ├── AppDelegate.swift            # App lifecycle and menubar
 │   ├── Models/                      # Data models
 │   │   ├── AppSettings.swift        # App configuration
+│   │   ├── AppState.swift           # Centralized state management
 │   │   ├── Character.swift          # Character data model
-│   │   ├── Habit.swift              # Habit tracking model (NEW)
-│   │   ├── HabitFrequency.swift     # Habit frequency enum (NEW)
+│   │   ├── Activity.swift           # Unified activity model (reminders + habits)
+│   │   ├── ActivityFrequency.swift  # Frequency enum
 │   │   ├── Message.swift            # Chat message model
-│   │   └── Reminder.swift           # Reminder model
+│   │   └── CharacterTemplate.swift  # Template definitions
 │   ├── Services/                    # Core services
-│   │   ├── AIService.swift          # OpenAI API + habit parsing
-│   │   ├── StorageService.swift     # JSON persistence
-│   │   ├── ReminderService.swift    # Notifications + habit reminders
+│   │   ├── AIService.swift          # OpenAI API + context management
+│   │   ├── StorageService.swift     # Multi-file JSON persistence
+│   │   ├── ActivityService.swift    # Unified notification scheduling
+│   │   ├── KeychainService.swift    # Secure API key storage
+│   │   ├── LoggerService.swift      # Category-based logging
 │   │   ├── SoundEffects.swift       # Sound effects + celebrations
 │   │   ├── VoiceService.swift       # Speech-to-text & TTS
-│   │   └── UpdateService.swift      # Auto-update system
+│   │   ├── VoiceSessionManager.swift # Voice session coordination
+│   │   └── UpdateService.swift      # Auto-update system (Sparkle)
 │   └── Views/                       # SwiftUI views
+│       ├── OnboardingView.swift     # First-run setup (4 steps)
 │       ├── CharacterWidget.swift    # Desktop character widget
-│       ├── ChatWindow.swift         # Chat + quick actions + celebrations
-│       ├── SettingsWindow.swift     # Settings + habit editor
-│       ├── HabitProgressView.swift  # 7-day calendar widget (NEW)
-│       ├── HabitQuickActions.swift  # Quick action buttons (NEW)
-│       └── CelebrationView.swift    # Confetti animation (NEW)
+│       ├── ChatWindow.swift         # Main chat interface
+│       ├── ChatViewModel.swift      # Chat business logic
+│       ├── SettingsWindow.swift     # Settings + activity editor
+│       ├── HabitProgressView.swift  # 7-day calendar with quick-add
+│       ├── HabitQuickActions.swift  # Quick action buttons
+│       ├── CelebrationView.swift    # Confetti animations
+│       └── CharacterLibraryView.swift # Template browser
+├── CharacterTemplates/              # 10 pre-built character JSON files
 ├── scripts/                         # Build and deployment scripts
-├── CLAUDE.md                        # Detailed project documentation
+├── CLAUDE.md                        # Technical documentation
+├── CHANGELOG.md                     # Version history
 └── README.md                        # This file
 ```
 
@@ -479,9 +491,8 @@ Builds and installs WigiAI to `/Applications/`
 **Version Bump & Release:**
 ```bash
 ./scripts/bump_version.sh [major|minor|patch] "Release description"
-git push origin main && git push origin --tags
 ```
-Creates a version tag and triggers GitHub Actions release build
+Automatically creates version tag, commits, and pushes to GitHub (which triggers release build via GitHub Actions)
 
 **Documentation:**
 - [DEPLOYMENT.md](DEPLOYMENT.md) - Local deployment guide
@@ -569,13 +580,18 @@ Don't hesitate to open an issue first if you want to discuss a larger change!
 
 ### Recently Completed ✅
 
-- [x] **Habit Tracking System** - Complete 8-phase implementation
+- [x] **Habit Tracking System** - Complete implementation
   - Conversational AI integration
   - Visual 7-day calendar progress
+  - Quick-add from chat window
   - Quick action buttons
   - Celebration animations with confetti
   - Reminder notifications
   - Streak tracking and milestones
+- [x] **Smart Model Switching** - Auto-switch to mini model for cost savings
+- [x] **Enhanced AI Context** - Improved persistent context with 7 priority areas
+- [x] **Secure API Storage** - KeychainService for API key security
+- [x] **Dark Mode Polish** - Better contrast for AI message bubbles
 
 ### Planned Features
 
