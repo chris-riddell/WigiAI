@@ -149,6 +149,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUserNoti
 
         let menu = NSMenu()
 
+        // Show All Characters with ⌘⇧W
+        let showAllItem = NSMenuItem(title: "Show All Characters", action: #selector(showAllCharacters), keyEquivalent: "w")
+        showAllItem.keyEquivalentModifierMask = [.command, .shift]
+        menu.addItem(showAllItem)
+        menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Characters", action: #selector(openCharacters), keyEquivalent: "1"))
         menu.addItem(NSMenuItem(title: "Settings", action: #selector(openSettings), keyEquivalent: ","))
         menu.addItem(NSMenuItem.separator())
@@ -310,6 +315,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUserNoti
 
         // Show the window without activating the app in menu bar
         window.makeKeyAndOrderFront(nil)
+    }
+
+    @objc func showAllCharacters() {
+        LoggerService.app.info("🎭 Showing all character widgets")
+
+        // Activate the app to bring windows to front (required for accessory apps)
+        NSApp.activate(ignoringOtherApps: true)
+
+        // Bring all character panels to front
+        for (id, window) in characterWindows {
+            if let characterPanel = window as? CharacterPanel {
+                characterPanel.orderFront(nil)
+                LoggerService.app.debug("   ✓ Brought character \(id) to front")
+            }
+        }
+
+        // Log count
+        let count = characterWindows.count
+        if count == 0 {
+            LoggerService.app.info("   ℹ️ No character widgets to show")
+        } else {
+            LoggerService.app.info("   ✓ Showed \(count) character widget(s)")
+        }
     }
 
     // MARK: - Onboarding
