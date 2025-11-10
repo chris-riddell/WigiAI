@@ -131,6 +131,29 @@ jobs:
           ./scripts/create_dmg.sh "${{ steps.find_app.outputs.APP_PATH }}" "WigiAI-${{ steps.get_version.outputs.VERSION }}.dmg"
           echo "DMG_PATH=WigiAI-${{ steps.get_version.outputs.VERSION }}.dmg" >> $GITHUB_OUTPUT
 
+      - name: Notarize DMG
+        if: steps.check_certs.outputs.has_certs == 'true'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.DEVELOPMENT_TEAM }}
+        run: |
+          echo "📝 Submitting DMG for notarization..."
+
+          # Submit for notarization
+          xcrun notarytool submit "${{ steps.create_dmg.outputs.DMG_PATH }}" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+
+          echo "✅ Notarization complete, stapling ticket to DMG..."
+
+          # Staple the notarization ticket (embeds it in the DMG)
+          xcrun stapler staple "${{ steps.create_dmg.outputs.DMG_PATH }}"
+
+          echo "✅ DMG is now notarized and stapled!"
+
       - name: Generate release notes
         id: release_notes
         run: |
@@ -142,22 +165,16 @@ jobs:
           1. Download `WigiAI-${{ steps.get_version.outputs.VERSION }}.dmg`
           2. Open the DMG file
           3. Drag WigiAI.app to your Applications folder
-          4. **Important:** Run this command in Terminal before launching:
-             ```bash
-             xattr -cr /Applications/WigiAI.app
-             ```
-          5. Launch WigiAI from Applications folder
+          4. Launch WigiAI from Applications folder
+
+          **Note:** This release is code-signed and notarized by Apple. No additional steps required!
 
           ### Troubleshooting
 
-          **"WigiAI is damaged and can't be opened"**
-          - This is a macOS security feature for unsigned apps
-          - **Solution:** Run `xattr -cr /Applications/WigiAI.app` in Terminal
-          - This removes the quarantine flag and allows the app to run
-
-          **"Cannot open because developer cannot be verified"**
-          - Right-click WigiAI.app → Click "Open"
-          - Or: **System Settings** → **Privacy & Security** → Click **"Open Anyway"**
+          If you encounter any issues opening the app:
+          - Make sure you downloaded from the official GitHub releases page
+          - Try redownloading if the DMG appears corrupted
+          - Check that you're running macOS 14.0 (Sonoma) or later
 
           ### Requirements
           - macOS 14.0 (Sonoma) or later
