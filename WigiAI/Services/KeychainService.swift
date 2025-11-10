@@ -14,8 +14,14 @@ import OSLog
 /// **Security Features:**
 /// - API keys never stored in JSON files
 /// - Uses macOS Keychain for secure system-level storage
-/// - Accessibility: `kSecAttrAccessibleWhenUnlocked` (no password prompts)
+/// - Accessibility: `kSecAttrAccessibleWhenUnlocked` (no password prompts with proper code signing)
 /// - Service isolation: Keys scoped to app bundle identifier
+/// - Keychain Access Group: App-specific group via entitlements (requires Developer ID signing)
+///
+/// **Code Signing Requirements:**
+/// - Requires valid Apple Developer certificate for password-free access
+/// - Entitlements must include `keychain-access-groups` with app identifier
+/// - Without proper signing: macOS may prompt for user password (security measure)
 ///
 /// **Migration:**
 /// - Automatically migrates API keys from JSON to Keychain on first run
