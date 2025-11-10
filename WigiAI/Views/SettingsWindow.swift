@@ -922,44 +922,65 @@ struct ActivityEditorSheet: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Toggle("Enable Progress Tracking", isOn: $isTrackingEnabled)
                             .font(.subheadline)
-                        Text(isTrackingEnabled ? "Tracks completions, streaks, and shows in progress view" : "Simple reminder without tracking")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
 
-                    Divider()
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Frequency")
-                            .font(.subheadline)
-                        Picker("Frequency", selection: $frequency) {
-                            ForEach(ActivityFrequency.allCases, id: \.self) { freq in
-                                Text(freq.displayName).tag(freq)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .labelsHidden()
-
-                        if frequency == .custom {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Select Days")
+                        VStack(alignment: .leading, spacing: 4) {
+                            if isTrackingEnabled {
+                                Text("✓ Shows in habit calendar")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                                Text("✓ Tracks completions, skips, and streaks")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                                Text("✓ Requires frequency selection")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                            } else {
+                                Text("Simple one-time notification")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
+                                Text("No calendar tracking or streaks")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .fixedSize(horizontal: false, vertical: true)
+                    }
 
-                                LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], spacing: 8) {
-                                    DayToggle(dayNumber: 1, dayName: "Sun", customDays: $customDays)
-                                    DayToggle(dayNumber: 2, dayName: "Mon", customDays: $customDays)
-                                    DayToggle(dayNumber: 3, dayName: "Tue", customDays: $customDays)
-                                    DayToggle(dayNumber: 4, dayName: "Wed", customDays: $customDays)
-                                    DayToggle(dayNumber: 5, dayName: "Thu", customDays: $customDays)
-                                    DayToggle(dayNumber: 6, dayName: "Fri", customDays: $customDays)
-                                    DayToggle(dayNumber: 7, dayName: "Sat", customDays: $customDays)
+                    if isTrackingEnabled {
+                        Divider()
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Frequency")
+                                .font(.subheadline)
+                            Picker("Frequency", selection: $frequency) {
+                                ForEach(ActivityFrequency.allCases, id: \.self) { freq in
+                                    Text(freq.displayName).tag(freq)
                                 }
                             }
-                            .padding(.top, 8)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
+                            .pickerStyle(.segmented)
+                            .labelsHidden()
+
+                            if frequency == .custom {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Select Days")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+
+                                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], spacing: 8) {
+                                        DayToggle(dayNumber: 1, dayName: "Sun", customDays: $customDays)
+                                        DayToggle(dayNumber: 2, dayName: "Mon", customDays: $customDays)
+                                        DayToggle(dayNumber: 3, dayName: "Tue", customDays: $customDays)
+                                        DayToggle(dayNumber: 4, dayName: "Wed", customDays: $customDays)
+                                        DayToggle(dayNumber: 5, dayName: "Thu", customDays: $customDays)
+                                        DayToggle(dayNumber: 6, dayName: "Fri", customDays: $customDays)
+                                        DayToggle(dayNumber: 7, dayName: "Sat", customDays: $customDays)
+                                    }
+                                }
+                                .padding(.top, 8)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
                         }
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
                     Divider()
@@ -996,7 +1017,7 @@ struct ActivityEditorSheet: View {
                 Button(editingActivity == nil ? "Add" : "Save") {
                     saveActivity()
                 }
-                .keyboardShortcut(.return)
+                .keyboardShortcut(.defaultAction)
                 .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty ||
                          (frequency == .custom && customDays.isEmpty))
             }
