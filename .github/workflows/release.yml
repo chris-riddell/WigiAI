@@ -116,9 +116,11 @@ jobs:
             -configuration Release \
             -derivedDataPath build \
             -arch arm64 -arch x86_64 \
-            -allowProvisioningUpdates \
             clean build \
-            DEVELOPMENT_TEAM="${{ secrets.DEVELOPMENT_TEAM }}"
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="${{ secrets.CODE_SIGN_IDENTITY }}" \
+            DEVELOPMENT_TEAM="${{ secrets.DEVELOPMENT_TEAM }}" \
+            PROVISIONING_PROFILE_SPECIFIER=""
 
       - name: Find built app
         id: find_app
