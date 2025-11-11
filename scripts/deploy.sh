@@ -46,12 +46,10 @@ cd "$PROJECT_DIR"
 xcodebuild \
     -scheme "$SCHEME" \
     -configuration Release \
-    -arch arm64 -arch x86_64 \
     clean build \
     | xcpretty 2>/dev/null || xcodebuild \
     -scheme "$SCHEME" \
     -configuration Release \
-    -arch arm64 -arch x86_64 \
     clean build
 
 # Find the built app in Xcode's Derived Data
