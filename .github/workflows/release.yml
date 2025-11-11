@@ -118,7 +118,6 @@ jobs:
             -arch arm64 -arch x86_64 \
             -allowProvisioningUpdates \
             clean build \
-            CODE_SIGN_IDENTITY="${{ secrets.CODE_SIGN_IDENTITY }}" \
             DEVELOPMENT_TEAM="${{ secrets.DEVELOPMENT_TEAM }}"
 
       - name: Find built app
