@@ -137,6 +137,7 @@ jobs:
 
       - name: Notarize DMG
         if: steps.check_certs.outputs.has_certs == 'true'
+        timeout-minutes: 30
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
@@ -144,12 +145,40 @@ jobs:
         run: |
           echo "📝 Submitting DMG for notarization..."
 
-          # Submit for notarization
-          xcrun notarytool submit "${{ steps.create_dmg.outputs.DMG_PATH }}" \
+          # Submit and capture the submission ID
+          SUBMISSION_OUTPUT=$(xcrun notarytool submit "${{ steps.create_dmg.outputs.DMG_PATH }}" \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_ID_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
-            --wait
+            --output-format json 2>&1)
+
+          echo "Submission response: $SUBMISSION_OUTPUT"
+
+          # Extract submission ID
+          SUBMISSION_ID=$(echo "$SUBMISSION_OUTPUT" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+          if [ -z "$SUBMISSION_ID" ]; then
+            echo "❌ Failed to get submission ID"
+            echo "$SUBMISSION_OUTPUT"
+            exit 1
+          fi
+
+          echo "Submission ID: $SUBMISSION_ID"
+          echo "Waiting for notarization to complete (this may take 5-20 minutes)..."
+
+          # Wait for notarization with timeout
+          xcrun notarytool wait "$SUBMISSION_ID" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --timeout 25m || {
+              echo "❌ Notarization failed or timed out"
+              xcrun notarytool log "$SUBMISSION_ID" \
+                --apple-id "$APPLE_ID" \
+                --password "$APPLE_ID_PASSWORD" \
+                --team-id "$APPLE_TEAM_ID"
+              exit 1
+            }
 
           echo "✅ Notarization complete, stapling ticket to DMG..."
 
