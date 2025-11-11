@@ -413,8 +413,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUserNoti
         window.contentView = NSHostingView(rootView: widgetView)
         window.isOpaque = false
         window.backgroundColor = .clear
-        window.level = .normal  // Changed from .floating to .normal so it doesn't stay on top
-        window.collectionBehavior = [.canJoinAllSpaces, .stationary, .transient]
+        window.level = .normal
+        window.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary]
         window.ignoresMouseEvents = false
         window.acceptsMouseMovedEvents = true  // Enable hover tracking
         window.isMovableByWindowBackground = true  // Enable window dragging

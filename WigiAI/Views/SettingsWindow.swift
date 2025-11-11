@@ -378,6 +378,150 @@ struct CharacterEditor: View {
     @EnvironmentObject var appState: AppState
     var appDelegate: AppDelegate
 
+    // MARK: - Voice Settings Section
+    @ViewBuilder
+    private var voiceSettingsSection: some View {
+        // Voice Settings (only show if global voice is enabled)
+        if appState.settings.voiceSettings.enabled {
+            GroupBox {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack {
+                        Image(systemName: "waveform")
+                            .foregroundColor(.cyan)
+                            .font(.title3)
+                        Text("Voice Settings")
+                            .font(.headline)
+                        Spacer()
+                        HStack(spacing: 4) {
+                            Text("EXPERIMENTAL")
+                                .font(.caption2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.orange)
+                            Text("• Optional")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.orange.opacity(0.15))
+                        .cornerRadius(4)
+                    }
+
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        Toggle("Use custom voice for this character", isOn: Binding(
+                            get: { character.customVoiceIdentifier != nil },
+                            set: { enabled in
+                                withAnimation {
+                                    appDelegate.appState.updateCharacter(withId: character.id) { updatedChar in
+                                        if enabled {
+                                            // Initialize with global defaults
+                                            updatedChar.customVoiceIdentifier = appState.settings.voiceSettings.voiceIdentifier
+                                            updatedChar.customSpeechRate = appState.settings.voiceSettings.speechRate
+                                        } else {
+                                            updatedChar.customVoiceIdentifier = nil
+                                            updatedChar.customSpeechRate = nil
+                                        }
+                                    }
+                                }
+                            }
+                        ))
+
+                        if character.customVoiceIdentifier != nil {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Divider()
+
+                                let installedVoices = voiceService.getPremiumVoices().filter { $0.isInstalled }
+                                let requestedVoiceId = character.customVoiceIdentifier ?? "com.apple.voice.premium.en-US.Zoe"
+
+                                // Auto-select fallback if requested voice isn't installed
+                                let actualVoiceId: String = {
+                                    if voiceService.isVoiceInstalled(requestedVoiceId) {
+                                        return requestedVoiceId
+                                    } else {
+                                        let fallbackVoice = voiceService.getBestAvailableVoice(preferredIdentifier: requestedVoiceId)
+                                        return fallbackVoice.identifier
+                                    }
+                                }()
+
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Voice")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+
+                                    Picker("Voice", selection: Binding(
+                                        get: { actualVoiceId },
+                                        set: { newValue in
+                                            appDelegate.appState.updateCharacter(withId: character.id) { updatedChar in
+                                                updatedChar.customVoiceIdentifier = newValue
+                                            }
+                                            print("💾 Character voice set to: \(newValue)")
+                                        }
+                                    )) {
+                                        ForEach(installedVoices, id: \.identifier) { voice in
+                                            Text(voice.name)
+                                                .tag(voice.identifier)
+                                        }
+                                    }
+                                    .labelsHidden()
+
+                                    // Show info if using fallback voice
+                                    if requestedVoiceId != actualVoiceId {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: "info.circle.fill")
+                                                .foregroundColor(.blue)
+                                                .font(.caption)
+                                            Text("Using fallback (requested voice not installed)")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        .padding(.top, 4)
+                                    }
+                                }
+
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        Text("Speech Rate")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Spacer()
+                                        Text(String(format: "%.2f", character.customSpeechRate ?? 0.52))
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Slider(
+                                        value: Binding(
+                                            get: { Double(character.customSpeechRate ?? 0.52) },
+                                            set: { newValue in
+                                                appDelegate.appState.updateCharacter(withId: character.id) { updatedChar in
+                                                    updatedChar.customSpeechRate = Float(newValue)
+                                                }
+                                            }
+                                        ),
+                                        in: 0.3...0.8,
+                                        step: 0.05
+                                    )
+                                }
+
+                                Text("Custom voice overrides the default voice from Settings")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                        } else {
+                            Text("Using default voice from Settings")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .padding(.top, 4)
+                        }
+                    }
+                }
+                .padding(16)
+            }
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
@@ -622,139 +766,8 @@ struct CharacterEditor: View {
                     .padding(16)
                 }
 
-                // Voice Settings (only show if global voice is enabled)
-                if appState.settings.voiceSettings.enabled {
-                    GroupBox {
-                        VStack(alignment: .leading, spacing: 16) {
-                            HStack {
-                                Image(systemName: "waveform")
-                                    .foregroundColor(.cyan)
-                                    .font(.title3)
-                                Text("Voice Settings")
-                                    .font(.headline)
-                                Spacer()
-                                HStack(spacing: 4) {
-                                    Text("EXPERIMENTAL")
-                                        .font(.caption2)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.orange)
-                                    Text("• Optional")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.orange.opacity(0.15))
-                                .cornerRadius(4)
-                            }
-
-                            Divider()
-
-                            VStack(alignment: .leading, spacing: 12) {
-                                Toggle("Use custom voice for this character", isOn: Binding(
-                                    get: { character.customVoiceIdentifier != nil },
-                                    set: { enabled in
-                                        withAnimation {
-                                            if enabled {
-                                                // Initialize with global defaults
-                                                character.customVoiceIdentifier = appState.settings.voiceSettings.voiceIdentifier
-                                                character.customSpeechRate = appState.settings.voiceSettings.speechRate
-                                            } else {
-                                                character.customVoiceIdentifier = nil
-                                                character.customSpeechRate = nil
-                                            }
-                                        }
-                                    }
-                                ))
-
-                                if character.customVoiceIdentifier != nil {
-                                    VStack(alignment: .leading, spacing: 12) {
-                                        Divider()
-
-                                        let installedVoices = voiceService.getPremiumVoices().filter { $0.isInstalled }
-                                        let requestedVoiceId = character.customVoiceIdentifier ?? "com.apple.voice.premium.en-US.Zoe"
-
-                                        // Auto-select fallback if requested voice isn't installed
-                                        let actualVoiceId: String = {
-                                            if voiceService.isVoiceInstalled(requestedVoiceId) {
-                                                return requestedVoiceId
-                                            } else {
-                                                let fallbackVoice = voiceService.getBestAvailableVoice(preferredIdentifier: requestedVoiceId)
-                                                return fallbackVoice.identifier
-                                            }
-                                        }()
-
-                                        VStack(alignment: .leading, spacing: 8) {
-                                            Text("Voice")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-
-                                            Picker("Voice", selection: Binding(
-                                                get: { actualVoiceId },
-                                                set: { newValue in
-                                                    character.customVoiceIdentifier = newValue
-                                                    print("💾 Character voice set to: \(newValue)")
-                                                }
-                                            )) {
-                                                ForEach(installedVoices, id: \.identifier) { voice in
-                                                    Text(voice.name)
-                                                        .tag(voice.identifier)
-                                                }
-                                            }
-                                            .labelsHidden()
-
-                                            // Show info if using fallback voice
-                                            if requestedVoiceId != actualVoiceId {
-                                                HStack(spacing: 6) {
-                                                    Image(systemName: "info.circle.fill")
-                                                        .foregroundColor(.blue)
-                                                        .font(.caption)
-                                                    Text("Using fallback (requested voice not installed)")
-                                                        .font(.caption)
-                                                        .foregroundColor(.secondary)
-                                                }
-                                                .padding(.top, 4)
-                                            }
-                                        }
-
-                                        VStack(alignment: .leading, spacing: 8) {
-                                            HStack {
-                                                Text("Speech Rate")
-                                                    .font(.caption)
-                                                    .foregroundColor(.secondary)
-                                                Spacer()
-                                                Text(String(format: "%.2f", character.customSpeechRate ?? 0.52))
-                                                    .font(.caption)
-                                                    .foregroundColor(.secondary)
-                                            }
-                                            Slider(
-                                                value: Binding(
-                                                    get: { Double(character.customSpeechRate ?? 0.52) },
-                                                    set: { newValue in
-                                                        character.customSpeechRate = Float(newValue)
-                                                    }
-                                                ),
-                                                in: 0.3...0.8,
-                                                step: 0.05
-                                            )
-                                        }
-
-                                        Text("Custom voice overrides the default voice from Settings")
-                                            .font(.caption2)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    .transition(.opacity.combined(with: .move(edge: .top)))
-                                } else {
-                                    Text("Using default voice from Settings")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .padding(.top, 4)
-                                }
-                            }
-                        }
-                        .padding(16)
-                    }
-                }
+                // Voice Settings
+                voiceSettingsSection
 
                 // Model Override
                 GroupBox {
