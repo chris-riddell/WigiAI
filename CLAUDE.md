@@ -309,14 +309,17 @@ For detailed version history, see `CHANGELOG.md`.
 
 ### Local Development
 ```bash
-./scripts/deploy.sh                              # Build and install to /Applications
+./scripts/deploy.sh                              # Build and install to /Applications (current architecture only)
 codesign -vv /Applications/WigiAI.app            # Verify code signing
 codesign -d --entitlements - /Applications/WigiAI.app  # Check entitlements
 ```
 
+**Note:** Local builds use Apple Development certificate and build only for current architecture (faster for testing).
+
 ### GitHub Releases (Automated)
 ```bash
 ./scripts/bump_version.sh patch "Bug fixes"      # Updates version, creates tag, and pushes
+# Or non-interactive: ./scripts/bump_version.sh patch "Bug fixes" --yes
 ```
 
 **What happens automatically:**
@@ -325,17 +328,29 @@ codesign -d --entitlements - /Applications/WigiAI.app  # Check entitlements
 3. Creates annotated git tag (e.g., `v1.0.7`)
 4. Pushes to GitHub
 5. GitHub Actions workflow triggers:
-   - Builds DMG with code signing
+   - Builds universal binary DMG (arm64 + x86_64)
+   - Signs with Developer ID Application certificate
+   - Notarizes with Apple
    - Creates GitHub release
    - Auto-generates `appcast.xml` from release metadata
    - Pushes appcast.xml back to main branch
 6. Users receive auto-updates via Sparkle
 
 **Key Points:**
+- **Universal binaries**: GitHub releases support both Apple Silicon and Intel Macs
+- **Developer ID signing**: Uses Manual signing with `CODE_SIGN_ENTITLEMENTS=""` to avoid provisioning profile requirements
 - `MARKETING_VERSION` is the only version number that matters (user-facing)
-- `CURRENT_PROJECT_VERSION` (build number) stays at "1" - not used
+- `CURRENT_PROJECT_VERSION` (build number) uses `github.run_number` for CI builds
 - `appcast.xml` is auto-generated from GitHub releases - don't edit manually
 - Workflow: `.github/workflows/release.yml`
+
+**GitHub Secrets Required:**
+- `CERTIFICATES_P12`: Base64-encoded Developer ID Application certificate
+- `CERTIFICATE_PASSWORD`: Password for .p12 file (empty string if none)
+- `DEVELOPMENT_TEAM`: Team ID (e.g., 82L4HKJ83Z)
+- `CODE_SIGN_IDENTITY`: Full certificate name (e.g., "Developer ID Application: Chris Riddell (82L4HKJ83Z)")
+- `APPLE_ID`: Apple ID email for notarization
+- `APPLE_ID_PASSWORD`: App-specific password for notarization
 
 ## Configuration
 
@@ -351,9 +366,11 @@ codesign -d --entitlements - /Applications/WigiAI.app  # Check entitlements
 - `SUScheduledCheckInterval` - Auto-update check frequency (86400 = daily)
 
 ### Code Signing
-- **Local dev:** Apple Development certificate (free Apple ID)
-- **Distribution:** Apple Developer Program ($99/year) recommended
-- **Entitlements:** App sandboxing disabled in `WigiAI.entitlements` (`com.apple.security.app-sandbox = false`)
+- **Local dev:** Apple Development certificate (free Apple ID), Automatic signing
+- **GitHub releases:** Developer ID Application certificate, Manual signing with `CODE_SIGN_ENTITLEMENTS=""` override
+  - Entitlements file cleared during CI builds to avoid provisioning profile requirements
+  - Project still has `WigiAI.entitlements` for local development (sandboxing disabled)
+- **Distribution:** Apple Developer Program ($99/year) required for Developer ID certificates and notarization
 
 ### Logging & Error Handling
 
