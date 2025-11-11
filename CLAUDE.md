@@ -344,14 +344,6 @@ codesign -d --entitlements - /Applications/WigiAI.app  # Check entitlements
 - `appcast.xml` is auto-generated from GitHub releases - don't edit manually
 - Workflow: `.github/workflows/release.yml`
 
-**GitHub Secrets Required:**
-- `CERTIFICATES_P12`: Base64-encoded Developer ID Application certificate
-- `CERTIFICATE_PASSWORD`: Password for .p12 file (empty string if none)
-- `DEVELOPMENT_TEAM`: Team ID (e.g., 82L4HKJ83Z)
-- `CODE_SIGN_IDENTITY`: Full certificate name (e.g., "Developer ID Application: Chris Riddell (82L4HKJ83Z)")
-- `APPLE_ID`: Apple ID email for notarization
-- `APPLE_ID_PASSWORD`: App-specific password for notarization
-
 ## Configuration
 
 ### Info.plist (Auto-Generated)
@@ -370,7 +362,7 @@ codesign -d --entitlements - /Applications/WigiAI.app  # Check entitlements
 - **GitHub releases:** Developer ID Application certificate, Manual signing with `CODE_SIGN_ENTITLEMENTS=""` override
   - Entitlements file cleared during CI builds to avoid provisioning profile requirements
   - Project still has `WigiAI.entitlements` for local development (sandboxing disabled)
-- **Distribution:** Apple Developer Program ($99/year) required for Developer ID certificates and notarization
+- **Distribution:** Apple Developer Program required for Developer ID certificates and notarization
 
 ### Logging & Error Handling
 
