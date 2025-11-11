@@ -1,9 +1,17 @@
 #!/bin/bash
 
 # Script to bump version and create a new release tag
-# Usage: ./bump_version.sh [major|minor|patch] [message]
+# Usage: ./bump_version.sh [major|minor|patch] [message] [--yes]
 
 set -e
+
+# Check for --yes flag
+YES_FLAG=false
+for arg in "$@"; do
+    if [[ "$arg" == "--yes" ]] || [[ "$arg" == "-y" ]]; then
+        YES_FLAG=true
+    fi
+done
 
 # Colors
 BLUE='\033[0;34m'
@@ -25,10 +33,14 @@ fi
 # Check for uncommitted changes
 if ! git diff-index --quiet HEAD --; then
     echo -e "${YELLOW}⚠️  You have uncommitted changes${NC}"
-    read -p "Continue anyway? [y/N] " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 1
+    if [[ "$YES_FLAG" == false ]]; then
+        read -p "Continue anyway? [y/N] " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            exit 1
+        fi
+    else
+        echo -e "${YELLOW}Continuing with uncommitted changes (--yes flag)${NC}"
     fi
 fi
 
@@ -79,11 +91,13 @@ echo -e "${BLUE}Preparing release:${NC}"
 echo -e "${BLUE}  Version: ${NEW_VERSION}${NC}"
 echo -e "${BLUE}  Message: ${MESSAGE}${NC}"
 echo ""
-read -p "Continue? [Y/n] " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]] && [[ -n $REPLY ]]; then
-    echo -e "${YELLOW}Cancelled${NC}"
-    exit 0
+if [[ "$YES_FLAG" == false ]]; then
+    read -p "Continue? [Y/n] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]] && [[ -n $REPLY ]]; then
+        echo -e "${YELLOW}Cancelled${NC}"
+        exit 0
+    fi
 fi
 
 # Update version in Xcode project
