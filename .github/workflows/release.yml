@@ -147,8 +147,7 @@ jobs:
           xcrun notarytool history \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_ID_PASSWORD" \
-            --team-id "$APPLE_TEAM_ID" \
-            --page 1 || echo "Could not fetch history"
+            --team-id "$APPLE_TEAM_ID" || echo "Could not fetch history"
 
           echo ""
           echo "📝 Submitting DMG for notarization..."
