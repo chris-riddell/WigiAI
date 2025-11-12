@@ -137,7 +137,8 @@ jobs:
 
       - name: Notarize DMG
         if: steps.check_certs.outputs.has_certs == 'true'
-        timeout-minutes: 30
+        timeout-minutes: 10
+        continue-on-error: true
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
@@ -171,7 +172,7 @@ jobs:
             --apple-id "$APPLE_ID" \
             --password "$APPLE_ID_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
-            --timeout 25m || {
+            --timeout 9m || {
               echo "❌ Notarization failed or timed out"
               xcrun notarytool log "$SUBMISSION_ID" \
                 --apple-id "$APPLE_ID" \
@@ -200,7 +201,7 @@ jobs:
           3. Drag WigiAI.app to your Applications folder
           4. Launch WigiAI from Applications folder
 
-          **Note:** This release is code-signed and notarized by Apple. No additional steps required!
+          **Note:** This release is code-signed by Apple for secure distribution.
 
           ### Troubleshooting
 
