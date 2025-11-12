@@ -135,12 +135,67 @@ jobs:
           ./scripts/create_dmg.sh "${{ steps.find_app.outputs.APP_PATH }}" "WigiAI-${{ steps.get_version.outputs.VERSION }}.dmg"
           echo "DMG_PATH=WigiAI-${{ steps.get_version.outputs.VERSION }}.dmg" >> $GITHUB_OUTPUT
 
-      # Notarization disabled - Apple's service is timing out
-      # The DMG is still code-signed with Developer ID Application certificate
-      # Users can right-click -> Open on first launch
-      # - name: Notarize DMG
-      #   if: steps.check_certs.outputs.has_certs == 'true'
-      #   ...
+      - name: Notarize DMG
+        if: steps.check_certs.outputs.has_certs == 'true'
+        timeout-minutes: 180
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.DEVELOPMENT_TEAM }}
+        run: |
+          echo "📝 Checking recent notarization history..."
+          xcrun notarytool history \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --page 1 || echo "Could not fetch history"
+
+          echo ""
+          echo "📝 Submitting DMG for notarization..."
+          echo "⏱️  This can take a few minutes to several hours during peak times"
+
+          # Submit and capture the submission ID
+          SUBMISSION_OUTPUT=$(xcrun notarytool submit "${{ steps.create_dmg.outputs.DMG_PATH }}" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --output-format json 2>&1)
+
+          echo "Submission response: $SUBMISSION_OUTPUT"
+
+          # Extract submission ID
+          SUBMISSION_ID=$(echo "$SUBMISSION_OUTPUT" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+          if [ -z "$SUBMISSION_ID" ]; then
+            echo "❌ Failed to get submission ID"
+            echo "$SUBMISSION_OUTPUT"
+            exit 1
+          fi
+
+          echo "✅ Submission ID: $SUBMISSION_ID"
+          echo "⏳ Waiting for Apple to process notarization (timeout: 2.5 hours)..."
+
+          # Wait for notarization with generous timeout for peak times
+          xcrun notarytool wait "$SUBMISSION_ID" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --timeout 150m || {
+              echo "❌ Notarization failed or timed out after 2.5 hours"
+              echo "Fetching notarization logs..."
+              xcrun notarytool log "$SUBMISSION_ID" \
+                --apple-id "$APPLE_ID" \
+                --password "$APPLE_ID_PASSWORD" \
+                --team-id "$APPLE_TEAM_ID"
+              exit 1
+            }
+
+          echo "✅ Notarization complete! Stapling ticket to DMG..."
+
+          # Staple the notarization ticket (embeds it in the DMG)
+          xcrun stapler staple "${{ steps.create_dmg.outputs.DMG_PATH }}"
+
+          echo "✅ DMG is now notarized and stapled!"
 
       - name: Generate release notes
         id: release_notes
@@ -153,20 +208,14 @@ jobs:
           1. Download `WigiAI-${{ steps.get_version.outputs.VERSION }}.dmg`
           2. Open the DMG file
           3. Drag WigiAI.app to your Applications folder
-          4. **First launch:** Right-click WigiAI in Applications → Click "Open" → Click "Open" again
-             - This is required because the app is code-signed but not notarized
-             - Only needed once - afterwards you can launch normally
+          4. Launch WigiAI from Applications folder
 
-          **Note:** This release is code-signed with a Developer ID Application certificate for secure distribution.
+          **Note:** This release is code-signed and notarized by Apple for secure distribution.
 
           ### Troubleshooting
 
-          If you see "WigiAI is damaged and can't be opened":
+          If you encounter any issues opening the app:
           - Make sure you downloaded from the official GitHub releases page
-          - Right-click → Open (don't double-click)
-          - If still blocked, run in Terminal: `xattr -cr /Applications/WigiAI.app`
-
-          Other issues:
           - Try redownloading if the DMG appears corrupted
           - Check that you're running macOS 14.0 (Sonoma) or later
 
