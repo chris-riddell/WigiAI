@@ -179,17 +179,31 @@ jobs:
             --apple-id "$APPLE_ID" \
             --password "$APPLE_ID_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
-            --timeout 150m || {
-              echo "❌ Notarization failed or timed out after 2.5 hours"
-              echo "Fetching notarization logs..."
-              xcrun notarytool log "$SUBMISSION_ID" \
-                --apple-id "$APPLE_ID" \
-                --password "$APPLE_ID_PASSWORD" \
-                --team-id "$APPLE_TEAM_ID"
-              exit 1
-            }
+            --timeout 150m
 
-          echo "✅ Notarization complete! Stapling ticket to DMG..."
+          # Check the final status
+          echo "Checking notarization status..."
+          STATUS_INFO=$(xcrun notarytool info "$SUBMISSION_ID" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID")
+
+          echo "$STATUS_INFO"
+
+          # Extract status
+          STATUS=$(echo "$STATUS_INFO" | grep "status:" | awk '{print $2}')
+
+          if [ "$STATUS" != "Accepted" ]; then
+            echo "❌ Notarization failed with status: $STATUS"
+            echo "Fetching detailed logs..."
+            xcrun notarytool log "$SUBMISSION_ID" \
+              --apple-id "$APPLE_ID" \
+              --password "$APPLE_ID_PASSWORD" \
+              --team-id "$APPLE_TEAM_ID"
+            exit 1
+          fi
+
+          echo "✅ Notarization accepted! Stapling ticket to DMG..."
 
           # Staple the notarization ticket (embeds it in the DMG)
           xcrun stapler staple "${{ steps.create_dmg.outputs.DMG_PATH }}"
