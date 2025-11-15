@@ -127,44 +127,11 @@ jobs:
           APP_PATH=$(find build -name "WigiAI.app" -type d | head -n 1)
           echo "Built app at: $APP_PATH"
 
-          # Sign the entire app bundle with Developer ID + hardened runtime + timestamps
+          # Sign with Developer ID Application certificate
           echo "Signing with Developer ID Application certificate..."
 
-          # Sign nested content first (inside-out approach required for bundles)
-          # Sign all frameworks
-          find "$APP_PATH/Contents/Frameworks" -name "*.framework" -type d 2>/dev/null | while read -r framework; do
-            echo "Signing framework: $framework"
-            codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
-              --timestamp \
-              --options runtime \
-              "$framework/Versions/A" 2>/dev/null || \
-            codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
-              --timestamp \
-              --options runtime \
-              "$framework"
-          done
-
-          # Sign all XPC services
-          find "$APP_PATH/Contents" -name "*.xpc" -type d 2>/dev/null | while read -r xpc; do
-            echo "Signing XPC service: $xpc"
-            codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
-              --timestamp \
-              --options runtime \
-              "$xpc"
-          done
-
-          # Sign all helper apps
-          find "$APP_PATH/Contents" -name "*.app" -type d 2>/dev/null | while read -r app; do
-            echo "Signing helper app: $app"
-            codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
-              --timestamp \
-              --options runtime \
-              "$app"
-          done
-
-          # Finally sign the main app bundle with entitlements
-          echo "Signing main app bundle..."
-          codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
+          # Use --deep to automatically sign all nested components in correct order
+          codesign --deep --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
             --timestamp \
             --options runtime \
             --entitlements WigiAI/WigiAI.entitlements \
