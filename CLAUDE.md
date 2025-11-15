@@ -325,23 +325,26 @@ codesign -d --entitlements - /Applications/WigiAI.app  # Check entitlements
 **What happens automatically:**
 1. Script updates `MARKETING_VERSION` in Xcode project
 2. Commits version bump
-3. Creates annotated git tag (e.g., `v1.0.7`)
+3. Creates annotated git tag (e.g., `v1.0.9`)
 4. Pushes to GitHub
 5. GitHub Actions workflow triggers:
-   - Builds universal binary DMG (arm64 + x86_64)
-   - Signs with Developer ID Application certificate
-   - Notarizes with Apple
-   - Creates GitHub release
+   - Builds unsigned universal binary (arm64 + x86_64)
+   - Signs with Developer ID Application certificate using `codesign --deep`
+   - Notarizes with Apple (typically 5-30 minutes)
+   - Creates GitHub release with DMG
    - Auto-generates `appcast.xml` from release metadata
-   - Pushes appcast.xml back to main branch
+   - Commits appcast.xml back to main branch (using PAT to bypass branch protection)
 6. Users receive auto-updates via Sparkle
 
 **Key Points:**
 - **Universal binaries**: GitHub releases support both Apple Silicon and Intel Macs
-- **Developer ID signing**: Uses Manual signing with `CODE_SIGN_ENTITLEMENTS=""` to avoid provisioning profile requirements
+- **Two-step signing**: Build unsigned, then sign with `codesign --deep` to avoid provisioning profile issues
+- **Hardened runtime**: `--options runtime` and `--timestamp` flags ensure notarization compatibility
+- **PAT authentication**: Uses `WORKFLOW_PAT` secret to push appcast updates despite branch protection
 - `MARKETING_VERSION` is the only version number that matters (user-facing)
 - `CURRENT_PROJECT_VERSION` (build number) uses `github.run_number` for CI builds
 - `appcast.xml` is auto-generated from GitHub releases - don't edit manually
+- EdDSA signatures disabled (optional security feature, not required for auto-updates)
 - Workflow: `.github/workflows/release.yml`
 
 ## Configuration
@@ -359,10 +362,15 @@ codesign -d --entitlements - /Applications/WigiAI.app  # Check entitlements
 
 ### Code Signing
 - **Local dev:** Apple Development certificate (free Apple ID), Automatic signing
-- **GitHub releases:** Developer ID Application certificate, Manual signing with `CODE_SIGN_ENTITLEMENTS=""` override
-  - Entitlements file cleared during CI builds to avoid provisioning profile requirements
-  - Project still has `WigiAI.entitlements` for local development (sandboxing disabled)
+- **GitHub releases:** Developer ID Application certificate with two-step approach:
+  1. Build unsigned (`CODE_SIGNING_REQUIRED=NO`) to avoid provisioning profile requirements
+  2. Sign with `codesign --deep --force --sign "Developer ID Application" --timestamp --options runtime`
+  3. Apply entitlements to main app bundle
+- **Why two-step?** Xcode's build system expects provisioning profiles for Manual signing, but Developer ID certificates don't use them
+- **Hardened runtime:** Required for notarization, applied via `--options runtime`
+- **Secure timestamps:** Required for notarization, applied via `--timestamp`
 - **Distribution:** Apple Developer Program required for Developer ID certificates and notarization
+- **Sparkle EdDSA signatures:** Currently disabled (optional security feature)
 
 ### Logging & Error Handling
 
