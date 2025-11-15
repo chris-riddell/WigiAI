@@ -329,8 +329,11 @@ codesign -d --entitlements - /Applications/WigiAI.app  # Check entitlements
 4. Pushes to GitHub
 5. GitHub Actions workflow triggers:
    - Builds unsigned universal binary (arm64 + x86_64)
-   - Signs with Developer ID Application certificate using `codesign --deep`
-   - Notarizes with Apple (typically 5-30 minutes)
+   - Signs app with Developer ID Application certificate using `codesign --deep`
+   - Creates DMG from signed app
+   - Signs DMG with Developer ID Application certificate
+   - Notarizes DMG with Apple (typically 5-30 minutes, can take hours during peak times)
+   - Staples notarization ticket to DMG
    - Creates GitHub release with DMG
    - Auto-generates `appcast.xml` from release metadata
    - Commits appcast.xml back to main branch (using PAT to bypass branch protection)
@@ -339,6 +342,7 @@ codesign -d --entitlements - /Applications/WigiAI.app  # Check entitlements
 **Key Points:**
 - **Universal binaries**: GitHub releases support both Apple Silicon and Intel Macs
 - **Two-step signing**: Build unsigned, then sign with `codesign --deep` to avoid provisioning profile issues
+- **DMG signing required**: Both the .app AND the .dmg must be signed with Developer ID for Gatekeeper to accept it
 - **Hardened runtime**: `--options runtime` and `--timestamp` flags ensure notarization compatibility
 - **PAT authentication**: Uses `WORKFLOW_PAT` secret to push appcast updates despite branch protection
 - `MARKETING_VERSION` is the only version number that matters (user-facing)

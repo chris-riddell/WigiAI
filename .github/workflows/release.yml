@@ -158,6 +158,19 @@ jobs:
           ./scripts/create_dmg.sh "${{ steps.find_app.outputs.APP_PATH }}" "WigiAI-${{ steps.get_version.outputs.VERSION }}.dmg"
           echo "DMG_PATH=WigiAI-${{ steps.get_version.outputs.VERSION }}.dmg" >> $GITHUB_OUTPUT
 
+      - name: Sign DMG
+        if: steps.check_certs.outputs.has_certs == 'true'
+        run: |
+          echo "📝 Signing DMG with Developer ID..."
+          codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
+            --timestamp \
+            "${{ steps.create_dmg.outputs.DMG_PATH }}"
+
+          echo "✅ Verifying DMG signature..."
+          codesign -dvvv "${{ steps.create_dmg.outputs.DMG_PATH }}"
+
+          echo "✅ DMG successfully signed!"
+
       - name: Notarize DMG
         if: steps.check_certs.outputs.has_certs == 'true'
         timeout-minutes: 180
