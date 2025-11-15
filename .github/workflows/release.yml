@@ -143,6 +143,13 @@ jobs:
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.DEVELOPMENT_TEAM }}
         run: |
+          echo "📝 Fetching logs from previous failed submission..."
+          xcrun notarytool log db3c0d88-2bba-4316-aa35-6b619c0c4545 \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" || echo "Could not fetch previous logs"
+
+          echo ""
           echo "📝 Checking recent notarization history..."
           xcrun notarytool history \
             --apple-id "$APPLE_ID" \
