@@ -120,7 +120,8 @@ jobs:
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="${{ secrets.CODE_SIGN_IDENTITY }}" \
             DEVELOPMENT_TEAM="${{ secrets.DEVELOPMENT_TEAM }}" \
-            CODE_SIGN_ENTITLEMENTS=""
+            ENABLE_HARDENED_RUNTIME=YES \
+            OTHER_CODE_SIGN_FLAGS="--timestamp --options=runtime"
 
       - name: Find built app
         id: find_app
@@ -143,20 +144,6 @@ jobs:
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.DEVELOPMENT_TEAM }}
         run: |
-          echo "📝 Fetching logs from previous failed submission..."
-          xcrun notarytool log db3c0d88-2bba-4316-aa35-6b619c0c4545 \
-            --apple-id "$APPLE_ID" \
-            --password "$APPLE_ID_PASSWORD" \
-            --team-id "$APPLE_TEAM_ID" || echo "Could not fetch previous logs"
-
-          echo ""
-          echo "📝 Checking recent notarization history..."
-          xcrun notarytool history \
-            --apple-id "$APPLE_ID" \
-            --password "$APPLE_ID_PASSWORD" \
-            --team-id "$APPLE_TEAM_ID" || echo "Could not fetch history"
-
-          echo ""
           echo "📝 Submitting DMG for notarization..."
           echo "⏱️  This can take a few minutes to several hours during peak times"
 
