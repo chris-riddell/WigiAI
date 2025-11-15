@@ -322,7 +322,7 @@ jobs:
 
       - name: Generate Sparkle appcast
         env:
-          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+          # SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}  # EdDSA signing disabled (optional feature)
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           GITHUB_USER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
