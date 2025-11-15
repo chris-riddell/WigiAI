@@ -111,17 +111,46 @@ jobs:
         env:
           DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
         run: |
+          # Build with Automatic signing first
           xcodebuild \
             -scheme WigiAI \
             -configuration Release \
             -derivedDataPath build \
             -arch arm64 -arch x86_64 \
-            clean build \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="${{ secrets.CODE_SIGN_IDENTITY }}" \
-            DEVELOPMENT_TEAM="${{ secrets.DEVELOPMENT_TEAM }}" \
-            ENABLE_HARDENED_RUNTIME=YES \
-            OTHER_CODE_SIGN_FLAGS="--timestamp --options=runtime"
+            clean build
+
+          # Find the built app
+          APP_PATH=$(find build -name "WigiAI.app" -type d | head -n 1)
+          echo "Built app at: $APP_PATH"
+
+          # Re-sign the entire app bundle with Developer ID + hardened runtime + timestamps
+          echo "Re-signing with Developer ID Application certificate..."
+
+          # Sign all nested frameworks and executables first (depth-first)
+          find "$APP_PATH" -type f \( -name "*.dylib" -o -name "*.framework" -o -perm +111 \) -print0 | while IFS= read -r -d '' file; do
+            if file "$file" | grep -q "Mach-O"; then
+              echo "Signing: $file"
+              codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
+                --timestamp \
+                --options runtime \
+                --deep \
+                "$file" 2>/dev/null || true
+            fi
+          done
+
+          # Finally sign the main app bundle
+          echo "Signing main app bundle..."
+          codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
+            --timestamp \
+            --options runtime \
+            --deep \
+            --entitlements WigiAI/WigiAI.entitlements \
+            "$APP_PATH"
+
+          # Verify the signature
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+
+          echo "✅ App successfully re-signed with Developer ID"
 
       - name: Find built app
         id: find_app
