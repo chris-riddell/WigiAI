@@ -106,51 +106,75 @@ jobs:
 
           rm certificate.p12
 
-      - name: Build app (signed)
+      - name: Build app (unsigned, will sign after)
         if: steps.check_certs.outputs.has_certs == 'true'
-        env:
-          DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
         run: |
-          # Build with Automatic signing first
+          # Build WITHOUT code signing
           xcodebuild \
             -scheme WigiAI \
             -configuration Release \
             -derivedDataPath build \
             -arch arm64 -arch x86_64 \
-            clean build
+            clean build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
 
+      - name: Sign app with Developer ID
+        if: steps.check_certs.outputs.has_certs == 'true'
+        run: |
           # Find the built app
           APP_PATH=$(find build -name "WigiAI.app" -type d | head -n 1)
           echo "Built app at: $APP_PATH"
 
-          # Re-sign the entire app bundle with Developer ID + hardened runtime + timestamps
-          echo "Re-signing with Developer ID Application certificate..."
+          # Sign the entire app bundle with Developer ID + hardened runtime + timestamps
+          echo "Signing with Developer ID Application certificate..."
 
-          # Sign all nested frameworks and executables first (depth-first)
-          find "$APP_PATH" -type f \( -name "*.dylib" -o -name "*.framework" -o -perm +111 \) -print0 | while IFS= read -r -d '' file; do
-            if file "$file" | grep -q "Mach-O"; then
-              echo "Signing: $file"
-              codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
-                --timestamp \
-                --options runtime \
-                --deep \
-                "$file" 2>/dev/null || true
-            fi
+          # Sign nested content first (inside-out approach required for bundles)
+          # Sign all frameworks
+          find "$APP_PATH/Contents/Frameworks" -name "*.framework" -type d 2>/dev/null | while read -r framework; do
+            echo "Signing framework: $framework"
+            codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
+              --timestamp \
+              --options runtime \
+              "$framework/Versions/A" 2>/dev/null || \
+            codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
+              --timestamp \
+              --options runtime \
+              "$framework"
           done
 
-          # Finally sign the main app bundle
+          # Sign all XPC services
+          find "$APP_PATH/Contents" -name "*.xpc" -type d 2>/dev/null | while read -r xpc; do
+            echo "Signing XPC service: $xpc"
+            codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
+              --timestamp \
+              --options runtime \
+              "$xpc"
+          done
+
+          # Sign all helper apps
+          find "$APP_PATH/Contents" -name "*.app" -type d 2>/dev/null | while read -r app; do
+            echo "Signing helper app: $app"
+            codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
+              --timestamp \
+              --options runtime \
+              "$app"
+          done
+
+          # Finally sign the main app bundle with entitlements
           echo "Signing main app bundle..."
           codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
             --timestamp \
             --options runtime \
-            --deep \
             --entitlements WigiAI/WigiAI.entitlements \
             "$APP_PATH"
 
           # Verify the signature
+          echo "Verifying signature..."
           codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 
-          echo "✅ App successfully re-signed with Developer ID"
+          echo "✅ App successfully signed with Developer ID"
 
       - name: Find built app
         id: find_app
