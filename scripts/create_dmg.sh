@@ -55,18 +55,30 @@ INSTALLATION:
 2. Launch WigiAI from Applications
 3. Look for the character bubble icon in your menubar
 
-FIRST LAUNCH:
-If you see a security warning, go to:
-System Settings > Privacy & Security > Open Anyway
+This release is code-signed and notarized by Apple.
+No additional steps required - just drag and launch! 🎉
 
-Or run in Terminal:
-  xattr -cr /Applications/WigiAI.app
+FEATURES:
+- AI-powered desktop character companions
+- Conversational habit tracking with celebrations
+- Voice interaction (offline, no API costs)
+- Automatic updates via Sparkle
+- Persistent chat history and context
 
 REQUIREMENTS:
 - macOS 14.0 (Sonoma) or later
+- OpenAI API key (or compatible API like Ollama)
+
+GETTING STARTED:
+1. Click the menubar icon → Settings
+2. Enter your API key and configure preferences
+3. Create or select a character from templates
+4. Start chatting with your AI companion!
 
 SUPPORT:
-https://github.com/chris-riddell/WigiAI
+- Documentation: https://github.com/chris-riddell/WigiAI
+- Issues: https://github.com/chris-riddell/WigiAI/issues
+- Updates: Automatic via Sparkle (checks daily)
 
 Enjoy your AI companions! 🎉
 EOF
