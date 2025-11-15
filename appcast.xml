@@ -1,22 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
-    <channel>
-        <title>WigiAI</title>
-        <description>AI Companion Desktop Widget</description>
-        <language>en</language>
-        <item>
-            <title>Version 1.0.6</title>
-            <pubDate>Thu, 30 Oct 2025 18:00:00 +1300</pubDate>
-            <sparkle:version>1.0.6</sparkle:version>
-            <sparkle:shortVersionString>1.0.6</sparkle:shortVersionString>
-            <link>https://github.com/chris-riddell/WigiAI</link>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <enclosure
-                url="https://github.com/chris-riddell/WigiAI/releases/download/v1.0.6/WigiAI-1.0.6.dmg"
-                sparkle:version="1.0.6"
-                sparkle:shortVersionString="1.0.6"
-                type="application/octet-stream"
-            />
-        </item>
-    </channel>
+  <channel>
+    <title>WigiAI Updates</title>
+    <link>https://github.com/chris-riddell/WigiAI</link>
+    <description>AI Companion Desktop Widget for macOS</description>
+    <language>en</language>
+    <item>
+      <title>Version 1.0.9</title>
+      <link>https://github.com/chris-riddell/WigiAI/releases/tag/v1.0.9</link>
+      <sparkle:version>1.0.9</sparkle:version>
+      <sparkle:shortVersionString>1.0.9</sparkle:shortVersionString>
+      <pubDate>Sat, 15 Nov 2025 00:33:27 +0000</pubDate>
+      <enclosure url="https://github.com/chris-riddell/WigiAI/releases/download/v1.0.9/WigiAI-1.0.9.dmg"
+                 sparkle:version="1.0.9"
+                 sparkle:shortVersionString="1.0.9"
+                 length="2733722"
+                 type="application/octet-stream" />
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <description><![CDATA[
+        <h2>What's New in 1.0.9</h2>
+        <p>## WigiAI v1.0.9
+
+### Installation
+
+1. Download `WigiAI-1.0.9.dmg`
+2. Open the DMG file
+3. Drag WigiAI.app to your Applications folder
+4. Launch WigiAI from Applications folder
+
+**Note:** This release is code-signed and notarized by Apple for secure distribution.
+
+### Troubleshooting
+
+If you encounter any issues opening the app:
+- Make sure you downloaded from the official GitHub releases page
+- Try redownloading if the DMG appears corrupted
+- Check that you're running macOS 14.0 (Sonoma) or later
+
+### Requirements
+- macOS 14.0 (Sonoma) or later
+
+### What's New
+- AI-powered desktop character companions
+- Habit tracking through conversational check-ins
+- Customizable characters with independent schedules
+- Real-time AI chat with streaming responses
+- Persistent chat history and context
+- Menubar integration
+- Launch on startup support
+- Automatic updates via Sparkle
+
+---
+**Build:** 39 | **Commit:** 7ec83f2f2851dc9f01a3b4c4341e85af121f3523</p>
+        <p><a href="https://github.com/chris-riddell/WigiAI/releases/tag/v1.0.9">View full release notes on GitHub</a></p>
+      ]]></description>
+    </item>
+  </channel>
 </rss>
