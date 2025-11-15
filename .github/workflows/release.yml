@@ -330,6 +330,9 @@ jobs:
 
       - name: Update appcast in repository
         run: |
+          # Save generated appcast before git reset
+          cp appcast.xml appcast.xml.tmp
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
@@ -340,7 +343,9 @@ jobs:
           git fetch origin main
           git checkout main
 
-          cp appcast.xml appcast.xml.new
+          # Restore saved appcast
+          mv appcast.xml.tmp appcast.xml
+
           git add appcast.xml
           git commit -m "Update appcast for v${{ steps.get_version.outputs.VERSION }}" || echo "No changes to commit"
           git push origin main || echo "Nothing to push"

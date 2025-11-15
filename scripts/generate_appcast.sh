@@ -46,10 +46,15 @@ sign_file_eddsa() {
         trap "rm -f $key_file" EXIT
     fi
 
-    # Sign the file with EdDSA
-    # The signature is the Ed25519 signature of the file, base64 encoded
+    # Sign the file with EdDSA (Ed25519)
+    # EdDSA signatures don't use dgst, they use pkeyutl
     local signature
-    signature=$(openssl dgst -sha512 -sign "$key_file" -binary "$file_path" | base64)
+    signature=$(openssl pkeyutl -sign -rawin -in "$file_path" -inkey "$key_file" 2>/dev/null | base64)
+
+    if [ -z "$signature" ]; then
+        # Fallback: try with dgst if pkeyutl doesn't work
+        signature=$(openssl dgst -sha512 -sign "$key_file" -binary "$file_path" 2>/dev/null | base64)
+    fi
 
     echo "$signature"
 }
@@ -113,7 +118,17 @@ fi
 
 # Get file size
 if [[ -n "$DMG_URL" ]]; then
-    FILE_SIZE=$(curl -sI "$DMG_URL" | grep -i "content-length" | awk '{print $2}' | tr -d '\r')
+    FILE_SIZE=$(curl -sIL "$DMG_URL" | grep -i "content-length" | tail -1 | awk '{print $2}' | tr -d '\r')
+
+    # If still empty, try getting from GitHub API asset info
+    if [[ -z "$FILE_SIZE" ]] || [[ "$FILE_SIZE" == "0" ]]; then
+        if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+            FILE_SIZE=$(echo "$RELEASE_JSON" | grep -o '"size":[[:space:]]*[0-9]*' | head -1 | awk '{print $2}')
+        fi
+    fi
+
+    # Default to 0 if we still can't get it
+    FILE_SIZE="${FILE_SIZE:-0}"
 else
     echo -e "${RED}❌ No DMG file found in release${NC}"
     exit 1
