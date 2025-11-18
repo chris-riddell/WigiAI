@@ -74,11 +74,13 @@ jobs:
             -scheme WigiAI \
             -configuration Release \
             -derivedDataPath build \
-            -arch arm64 -arch x86_64 \
+            -destination 'generic/platform=macOS' \
             clean build \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=NO \
+            ARCHS="arm64 x86_64"
 
       # Option 2: Build WITH code signing (when certificates are configured)
       - name: Import signing certificate
@@ -116,11 +118,13 @@ jobs:
             -scheme WigiAI \
             -configuration Release \
             -derivedDataPath build \
-            -arch arm64 -arch x86_64 \
+            -destination 'generic/platform=macOS' \
             clean build \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=NO \
+            ARCHS="arm64 x86_64"
 
       - name: Sign app with Developer ID
         if: steps.check_certs.outputs.has_certs == 'true'

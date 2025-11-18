@@ -41,6 +41,7 @@ rm -rf "$BUILD_DIR"
 
 # Step 3: Build the app
 echo -e "${BLUE}🔨 Building ${APP_NAME} (Release)...${NC}"
+echo -e "${BLUE}   Note: Building for current architecture only (faster for local testing)${NC}"
 cd "$PROJECT_DIR"
 
 xcodebuild \

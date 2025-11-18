@@ -55,7 +55,7 @@ git push origin main
 git push origin --tags
 ```
 
-See [GITHUB_RELEASE.md](../GITHUB_RELEASE.md) for full release guide.
+GitHub Actions will automatically build, sign, notarize, and create the release.
 
 ---
 
@@ -207,6 +207,5 @@ git push origin --tags
 
 ## 📚 Documentation
 
-- [DEPLOYMENT.md](../DEPLOYMENT.md) - Local deployment guide
-- [GITHUB_RELEASE.md](../GITHUB_RELEASE.md) - GitHub release setup and workflow
 - [CLAUDE.md](../CLAUDE.md) - Project documentation
+- [README.md](../README.md) - User-facing documentation and quick start
