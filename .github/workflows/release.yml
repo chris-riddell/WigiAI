@@ -120,7 +120,9 @@ jobs:
             -derivedDataPath build \
             -destination 'generic/platform=macOS' \
             clean build \
+            CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="${{ secrets.CODE_SIGN_IDENTITY }}" \
+            DEVELOPMENT_TEAM="${{ secrets.DEVELOPMENT_TEAM }}" \
             OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" \
             ONLY_ACTIVE_ARCH=NO \
             ARCHS="arm64 x86_64"
