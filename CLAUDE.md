@@ -341,6 +341,8 @@ codesign -d --entitlements - /Applications/WigiAI.app  # Check entitlements
 
 **Key Points:**
 - **Universal binaries**: GitHub releases support both Apple Silicon and Intel Macs
+  - Built using `-destination 'generic/platform=macOS'` with `ARCHS="arm64 x86_64"`
+  - Note: Using `-arch arm64 -arch x86_64` flags doesn't work with modern xcodebuild
 - **Two-step signing**: Build unsigned, then sign with `codesign --deep` to avoid provisioning profile issues
 - **DMG signing required**: Both the .app AND the .dmg must be signed with Developer ID for Gatekeeper to accept it
 - **Hardened runtime**: `--options runtime` and `--timestamp` flags ensure notarization compatibility
