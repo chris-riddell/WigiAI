@@ -110,28 +110,26 @@ jobs:
 
           rm certificate.p12
 
-      - name: Build app (unsigned)
+      - name: Build and sign app
         if: steps.check_certs.outputs.has_certs == 'true'
         run: |
+          # Build WITH signing - let Xcode handle it properly
           xcodebuild \
             -scheme WigiAI \
             -configuration Release \
             -derivedDataPath build \
             -destination 'generic/platform=macOS' \
             clean build \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="${{ secrets.CODE_SIGN_IDENTITY }}" \
+            OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" \
             ONLY_ACTIVE_ARCH=NO \
             ARCHS="arm64 x86_64"
 
-      - name: Sign app with all components
-        if: steps.check_certs.outputs.has_certs == 'true'
-        run: |
           APP_PATH=$(find build -name "WigiAI.app" -type d | head -n 1)
           echo "Built app at: $APP_PATH"
 
-          ./scripts/sign_app.sh "$APP_PATH" "${{ secrets.CODE_SIGN_IDENTITY }}"
+          echo "Verifying signature..."
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 
       - name: Find built app
         id: find_app
