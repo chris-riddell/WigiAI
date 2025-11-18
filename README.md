@@ -10,13 +10,9 @@ Your personal AI assistant that lives on your desktop. Build better habits throu
 
 <br>
 
-<img src="images/01-chat-window.jpg" alt="Chat with AI companion" width="600">
+<img src="images/01-hero.jpg" alt="WigiAI - AI companions on your desktop" width="700">
 
 </div>
-
-<img src="images/02-desktop-widget.jpg" alt="Desktop widget companion" width="250">
-<br>
-<em>Your AI companions live on your desktop</em>
 
 ---
 
