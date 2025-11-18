@@ -117,13 +117,32 @@ jobs:
       - name: Build and sign app
         if: steps.check_certs.outputs.has_certs == 'true'
         run: |
-          # Build WITH signing - Release configuration set to Manual in project
-          # Must still provide PROVISIONING_PROFILE_SPECIFIER="" when overriding other signing settings
-          xcodebuild -scheme WigiAI -configuration Release -derivedDataPath build -destination 'generic/platform=macOS' clean build DEVELOPMENT_TEAM="${{ secrets.DEVELOPMENT_TEAM }}" CODE_SIGN_IDENTITY="${{ secrets.CODE_SIGN_IDENTITY }}" PROVISIONING_PROFILE_SPECIFIER="" OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" ONLY_ACTIVE_ARCH=NO ARCHS="arm64 x86_64"
+          # Define all parameters as variables to ensure clean shell expansion
+          TEAM_ID="${{ secrets.DEVELOPMENT_TEAM }}"
+          SIGN_IDENTITY="${{ secrets.CODE_SIGN_IDENTITY }}"
 
+          # Execute the build with the most robust syntax
+          xcodebuild \
+            -scheme WigiAI \
+            -configuration Release \
+            -derivedDataPath build \
+            -destination 'generic/platform=macOS' \
+            clean build \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CODE_SIGN_IDENTITY="$SIGN_IDENTITY" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" \
+            ONLY_ACTIVE_ARCH=NO \
+            ARCHS="arm64 x86_64"
+
+          # --- Verification Step ---
           APP_PATH=$(find build -name "WigiAI.app" -type d | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "::error::Build failed, WigiAI.app not found."
+            exit 1
+          fi
           echo "Built app at: $APP_PATH"
-
           echo "Verifying signature..."
           codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 
