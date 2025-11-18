@@ -110,27 +110,35 @@ jobs:
 
           rm certificate.p12
 
-      - name: Build and sign app
+          # Verify certificate is accessible
+          echo "Verifying certificate..."
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+
+      - name: Build app (unsigned)
         if: steps.check_certs.outputs.has_certs == 'true'
         run: |
-          # Build WITH signing - let Xcode handle it properly
           xcodebuild \
             -scheme WigiAI \
             -configuration Release \
             -derivedDataPath build \
             -destination 'generic/platform=macOS' \
             clean build \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="${{ secrets.CODE_SIGN_IDENTITY }}" \
-            DEVELOPMENT_TEAM="${{ secrets.DEVELOPMENT_TEAM }}" \
-            OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
             ONLY_ACTIVE_ARCH=NO \
             ARCHS="arm64 x86_64"
 
+      - name: Sign all app components
+        if: steps.check_certs.outputs.has_certs == 'true'
+        run: |
           APP_PATH=$(find build -name "WigiAI.app" -type d | head -n 1)
           echo "Built app at: $APP_PATH"
 
-          echo "Verifying signature..."
+          # Use comprehensive signing script
+          ./scripts/sign_app.sh "$APP_PATH" "${{ secrets.CODE_SIGN_IDENTITY }}"
+
+          echo "Verifying final signature..."
           codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 
       - name: Find built app
@@ -295,19 +303,24 @@ jobs:
             ATTEMPT=$((ATTEMPT + 1))
             echo "Attempt $ATTEMPT/$MAX_ATTEMPTS: Checking if asset is available..."
 
-            # Get the release and check if our DMG is in the assets
-            ASSETS=$(gh api repos/$GITHUB_USER/$GITHUB_REPO/releases/tags/$TAG_NAME --jq '.assets[].name' 2>/dev/null || echo "")
+            # Use curl instead of gh CLI (which isn't installed)
+            RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/$GITHUB_USER/$GITHUB_REPO/releases/tags/$TAG_NAME")
+
+            ASSETS=$(echo "$RESPONSE" | grep -o '"name":"[^"]*"' | cut -d'"' -f4)
 
             if echo "$ASSETS" | grep -q "$DMG_NAME"; then
-              # Found the asset, now check if it's downloadable (returns 200)
-              ASSET_URL=$(gh api repos/$GITHUB_USER/$GITHUB_REPO/releases/tags/$TAG_NAME --jq ".assets[] | select(.name == \"$DMG_NAME\") | .browser_download_url")
-              HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L "$ASSET_URL")
+              # Found the asset, now check if it's downloadable
+              ASSET_URL=$(echo "$RESPONSE" | grep -o '"browser_download_url":"[^"]*'$DMG_NAME'"' | cut -d'"' -f4)
+              if [ -n "$ASSET_URL" ]; then
+                HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L "$ASSET_URL")
 
-              if [ "$HTTP_STATUS" = "200" ]; then
-                echo "✅ Asset is available and downloadable!"
-                exit 0
-              else
-                echo "Asset found but not yet downloadable (HTTP $HTTP_STATUS), waiting..."
+                if [ "$HTTP_STATUS" = "200" ]; then
+                  echo "✅ Asset is available and downloadable!"
+                  exit 0
+                else
+                  echo "Asset found but not yet downloadable (HTTP $HTTP_STATUS), waiting..."
+                fi
               fi
             else
               echo "Asset not found in release yet, waiting..."
