@@ -10,15 +10,13 @@ Your personal AI assistant that lives on your desktop. Build better habits throu
 
 <br>
 
-<img src="images/01-chat-window.jpg" alt="Chat with AI companion" width="800">
+<img src="images/01-chat-window.jpg" alt="Chat with AI companion" width="600">
 
 </div>
 
-<div align="center">
-<img src="images/02-desktop-widget.jpg" alt="Desktop widget companion">
+<img src="images/02-desktop-widget.jpg" alt="Desktop widget companion" width="250">
 <br>
 <em>Your AI companions live on your desktop</em>
-</div>
 
 ---
 
@@ -256,7 +254,7 @@ Each template comes with:
 Browse the character library in-app to add any template with one click!
 
 <div align="center">
-<img src="images/03-character-library.jpg" alt="Character Library with templates" width="800">
+<img src="images/03-character-library.jpg" alt="Character Library with templates" width="600">
 <br>
 <em>Choose from 10 pre-built character templates or create your own</em>
 </div>
@@ -306,7 +304,7 @@ Model: your-model-name
   - Disable for slower connections
 
 <div align="center">
-<img src="images/04-api-settings.jpg" alt="API Settings and Configuration" width="800">
+<img src="images/04-api-settings.jpg" alt="API Settings and Configuration" width="600">
 <br>
 <em>Powerful configuration options for OpenAI, Ollama, or custom APIs</em>
 </div>
@@ -379,7 +377,7 @@ Character: "That's amazing! You've kept it up for a whole week! 🔥"
 ```
 
 <div align="center">
-<img src="images/05-habit-tracking.jpg" alt="Habit tracking with 7-day calendar" width="800">
+<img src="images/05-habit-tracking.jpg" alt="Habit tracking with 7-day calendar" width="600">
 <br>
 <em>Track habits naturally through conversation with visual progress calendars</em>
 </div>
