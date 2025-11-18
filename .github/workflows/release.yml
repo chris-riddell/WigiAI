@@ -135,12 +135,32 @@ jobs:
 
           echo "Signing with Developer ID Application certificate..."
 
-          echo "Signing Sparkle.framework..."
+          echo "Signing Sparkle.framework nested components..."
+
+          # Sign XPC services
+          codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
+            --timestamp \
+            --options runtime \
+            "$APP_PATH/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc"
+
+          codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
+            --timestamp \
+            --options runtime \
+            "$APP_PATH/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc"
+
+          # Sign Autoupdate binary
+          codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
+            --timestamp \
+            --options runtime \
+            "$APP_PATH/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate"
+
+          # Sign Updater app
           codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
             --timestamp \
             --options runtime \
             "$APP_PATH/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app"
 
+          # Sign the framework itself
           codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
             --timestamp \
             --options runtime \
