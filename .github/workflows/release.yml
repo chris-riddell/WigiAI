@@ -133,11 +133,21 @@ jobs:
           APP_PATH=$(find build -name "WigiAI.app" -type d | head -n 1)
           echo "Built app at: $APP_PATH"
 
-          # Sign with Developer ID Application certificate
           echo "Signing with Developer ID Application certificate..."
 
-          # Use --deep to automatically sign all nested components in correct order
-          codesign --deep --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
+          echo "Signing Sparkle.framework..."
+          codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
+            --timestamp \
+            --options runtime \
+            "$APP_PATH/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app"
+
+          codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
+            --timestamp \
+            --options runtime \
+            "$APP_PATH/Contents/Frameworks/Sparkle.framework"
+
+          echo "Signing main app bundle..."
+          codesign --force --sign "${{ secrets.CODE_SIGN_IDENTITY }}" \
             --timestamp \
             --options runtime \
             --entitlements WigiAI/WigiAI.entitlements \
