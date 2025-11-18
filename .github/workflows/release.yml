@@ -114,31 +114,28 @@ jobs:
           echo "Verifying certificate..."
           security find-identity -v -p codesigning "$KEYCHAIN_PATH"
 
-      - name: Build app (unsigned)
+      - name: Build and sign app
         if: steps.check_certs.outputs.has_certs == 'true'
         run: |
+          # Build with Manual signing - provide ALL required settings
           xcodebuild \
             -scheme WigiAI \
             -configuration Release \
             -derivedDataPath build \
             -destination 'generic/platform=macOS' \
             clean build \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="${{ secrets.CODE_SIGN_IDENTITY }}" \
+            DEVELOPMENT_TEAM="${{ secrets.DEVELOPMENT_TEAM }}" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" \
             ONLY_ACTIVE_ARCH=NO \
             ARCHS="arm64 x86_64"
 
-      - name: Sign all app components
-        if: steps.check_certs.outputs.has_certs == 'true'
-        run: |
           APP_PATH=$(find build -name "WigiAI.app" -type d | head -n 1)
           echo "Built app at: $APP_PATH"
 
-          # Use comprehensive signing script
-          ./scripts/sign_app.sh "$APP_PATH" "${{ secrets.CODE_SIGN_IDENTITY }}"
-
-          echo "Verifying final signature..."
+          echo "Verifying signature..."
           codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 
       - name: Find built app
