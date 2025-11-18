@@ -6,24 +6,24 @@
     <description>AI Companion Desktop Widget for macOS</description>
     <language>en</language>
     <item>
-      <title>Version 1.0.11</title>
-      <link>https://github.com/chris-riddell/WigiAI/releases/tag/v1.0.11</link>
-      <sparkle:version>1.0.11</sparkle:version>
-      <sparkle:shortVersionString>1.0.11</sparkle:shortVersionString>
-      <pubDate>Tue, 18 Nov 2025 08:52:31 +0000</pubDate>
-      <enclosure url="https://github.com/chris-riddell/WigiAI/releases/download/v1.0.11/WigiAI-1.0.11.dmg"
-                 sparkle:version="1.0.11"
-                 sparkle:shortVersionString="1.0.11"
-                 length="3950469"
+      <title>Version 1.0.13</title>
+      <link>https://github.com/chris-riddell/WigiAI/releases/tag/v1.0.13</link>
+      <sparkle:version>1.0.13</sparkle:version>
+      <sparkle:shortVersionString>1.0.13</sparkle:shortVersionString>
+      <pubDate>Tue, 18 Nov 2025 09:27:05 +0000</pubDate>
+      <enclosure url="https://github.com/chris-riddell/WigiAI/releases/download/v1.0.13/WigiAI-1.0.13.dmg"
+                 sparkle:version="1.0.13"
+                 sparkle:shortVersionString="1.0.13"
+                 length="4801467"
                  type="application/octet-stream" />
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
       <description><![CDATA[
-        <h2>What's New in 1.0.11</h2>
-        <p>## WigiAI v1.0.11
+        <h2>What's New in 1.0.13</h2>
+        <p>## WigiAI v1.0.13
 
 ### Installation
 
-1. Download `WigiAI-1.0.11.dmg`
+1. Download `WigiAI-1.0.13.dmg`
 2. Open the DMG file
 3. Drag WigiAI.app to your Applications folder
 4. Launch WigiAI from Applications folder
@@ -51,8 +51,8 @@ If you encounter any issues opening the app:
 - Automatic updates via Sparkle
 
 ---
-**Build:** 41 | **Commit:** b9c6b0239016d8a1e7fbd62229b87382aff69a9e</p>
-        <p><a href="https://github.com/chris-riddell/WigiAI/releases/tag/v1.0.11">View full release notes on GitHub</a></p>
+**Build:** 43 | **Commit:** d1a99a8cc9ada650b195421302909d310af42014</p>
+        <p><a href="https://github.com/chris-riddell/WigiAI/releases/tag/v1.0.13">View full release notes on GitHub</a></p>
       ]]></description>
     </item>
   </channel>
