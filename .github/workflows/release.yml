@@ -140,9 +140,9 @@ jobs:
           fi
           echo "Built app at: $APP_PATH"
 
-          # Sign all components in correct order (inside-out)
+          # Sign all components in correct order (inside-out) with expanded entitlements
           echo "📝 Signing app components with Developer ID..."
-          ./scripts/sign_app.sh "$APP_PATH" "${{ secrets.CODE_SIGN_IDENTITY }}"
+          ./scripts/sign_app.sh "$APP_PATH" "${{ secrets.CODE_SIGN_IDENTITY }}" "${{ secrets.DEVELOPMENT_TEAM }}"
 
       - name: Find built app
         id: find_app

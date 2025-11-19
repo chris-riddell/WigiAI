@@ -3,13 +3,24 @@ set -e
 
 APP_PATH="$1"
 IDENTITY="$2"
+TEAM_ID="$3"
 
 if [ -z "$APP_PATH" ] || [ -z "$IDENTITY" ]; then
-    echo "Usage: $0 <app-path> <identity>"
+    echo "Usage: $0 <app-path> <identity> [team-id]"
     exit 1
 fi
 
 echo "Signing all components in: $APP_PATH"
+
+# Create temporary entitlements file with expanded variables
+if [ -n "$TEAM_ID" ]; then
+    ENTITLEMENTS_TEMP=$(mktemp)
+    sed "s/\$(AppIdentifierPrefix)/${TEAM_ID}./g" "$(dirname "$0")/../WigiAI/WigiAI.entitlements" > "$ENTITLEMENTS_TEMP"
+    trap "rm -f $ENTITLEMENTS_TEMP" EXIT
+    echo "Expanded entitlements to: $ENTITLEMENTS_TEMP"
+else
+    ENTITLEMENTS_TEMP="$(dirname "$0")/../WigiAI/WigiAI.entitlements"
+fi
 
 # Sign from inside-out (deepest components first)
 # 1. XPC Services
@@ -44,7 +55,7 @@ codesign --force --sign "$IDENTITY" \
 echo "Signing main app..."
 codesign --force --sign "$IDENTITY" \
   --timestamp --options runtime \
-  --entitlements "$(dirname "$0")/../WigiAI/WigiAI.entitlements" \
+  --entitlements "$ENTITLEMENTS_TEMP" \
   "$APP_PATH"
 
 # Verify
