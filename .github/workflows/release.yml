@@ -140,12 +140,9 @@ jobs:
           fi
           echo "Built app at: $APP_PATH"
 
-          # Sign with Developer ID using codesign directly
-          echo "📝 Signing app with Developer ID..."
-          /usr/bin/codesign --force --deep --sign "${{ secrets.CODE_SIGN_IDENTITY }}" --options runtime --timestamp "$APP_PATH"
-
-          echo "✅ Verifying signature..."
-          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          # Sign all components in correct order (inside-out)
+          echo "📝 Signing app components with Developer ID..."
+          ./scripts/sign_app.sh "$APP_PATH" "${{ secrets.CODE_SIGN_IDENTITY }}"
 
       - name: Find built app
         id: find_app
