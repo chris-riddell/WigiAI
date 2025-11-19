@@ -8,8 +8,6 @@
 	<string>$(TeamIdentifierPrefix)82L4HKJ83Z</string>
 	<key>com.apple.security.app-sandbox</key>
 	<false/>
-	<key>com.apple.security.get-task-allow</key>
-	<true/>
 	<key>keychain-access-groups</key>
 	<array>
 		<string>$(AppIdentifierPrefix)me.chrisriddell.WigiAI</string>
