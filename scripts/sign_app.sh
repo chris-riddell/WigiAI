@@ -12,10 +12,20 @@ fi
 
 echo "Signing all components in: $APP_PATH"
 
-# Use entitlements file as-is (codesign will expand variables automatically)
-ENTITLEMENTS_TEMP="$(dirname "$0")/../WigiAI/WigiAI.entitlements"
-echo "Using entitlements file: $ENTITLEMENTS_TEMP"
-cat "$ENTITLEMENTS_TEMP"
+# Expand entitlements variables (REQUIRED for app to launch)
+if [ -n "$TEAM_ID" ]; then
+    ENTITLEMENTS_TEMP=$(mktemp)
+    sed -e "s/\$(AppIdentifierPrefix)/${TEAM_ID}./g" \
+        -e "s/\$(TeamIdentifierPrefix)/${TEAM_ID}/g" \
+        "$(dirname "$0")/../WigiAI/WigiAI.entitlements" > "$ENTITLEMENTS_TEMP"
+    trap "rm -f $ENTITLEMENTS_TEMP" EXIT
+    echo "Expanded entitlements to: $ENTITLEMENTS_TEMP"
+    cat "$ENTITLEMENTS_TEMP"
+else
+    ENTITLEMENTS_TEMP="$(dirname "$0")/../WigiAI/WigiAI.entitlements"
+    echo "Using entitlements file: $ENTITLEMENTS_TEMP"
+    cat "$ENTITLEMENTS_TEMP"
+fi
 
 # Sign from inside-out (deepest components first)
 # 1. XPC Services
