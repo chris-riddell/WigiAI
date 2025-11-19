@@ -114,34 +114,37 @@ jobs:
           echo "Verifying certificate..."
           security find-identity -v -p codesigning "$KEYCHAIN_PATH"
 
-      - name: Build and sign app
+      - name: Build app (unsigned)
         if: steps.check_certs.outputs.has_certs == 'true'
         run: |
-          # Define all parameters as variables to ensure clean shell expansion
-          TEAM_ID="${{ secrets.DEVELOPMENT_TEAM }}"
-          SIGN_IDENTITY="${{ secrets.CODE_SIGN_IDENTITY }}"
-
-          # Execute the build - using Automatic signing with identity override
+          # Build unsigned first (Xcode 's automatic signing conflicts with CI identity override)
           xcodebuild \
             -scheme WigiAI \
             -configuration Release \
             -derivedDataPath build \
             -destination 'generic/platform=macOS' \
             clean build \
-            DEVELOPMENT_TEAM="$TEAM_ID" \
-            CODE_SIGN_IDENTITY="$SIGN_IDENTITY" \
-            OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
             ONLY_ACTIVE_ARCH=NO \
             ARCHS="arm64 x86_64"
 
-          # --- Verification Step ---
+      - name: Sign app with Developer ID
+        if: steps.check_certs.outputs.has_certs == 'true'
+        run: |
           APP_PATH=$(find build -name "WigiAI.app" -type d | head -n 1)
           if [ -z "$APP_PATH" ]; then
             echo "::error::Build failed, WigiAI.app not found."
             exit 1
           fi
           echo "Built app at: $APP_PATH"
-          echo "Verifying signature..."
+
+          # Sign with Developer ID using codesign directly
+          echo "📝 Signing app with Developer ID..."
+          /usr/bin/codesign --force --deep --sign "${{ secrets.CODE_SIGN_IDENTITY }}" --options runtime --timestamp "$APP_PATH"
+
+          echo "✅ Verifying signature..."
           codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 
       - name: Find built app
