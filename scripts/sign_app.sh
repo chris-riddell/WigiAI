@@ -31,8 +31,8 @@ else
     cat "$ENTITLEMENTS_TEMP"
 fi
 
-# Sign from inside-out (deepest components first)
-# This is CRITICAL - nested code must be signed before outer containers
+# CRITICAL: Sign from inside-out (deepest components first)
+# Violating this order causes POSIX 153!
 
 # 1. Sign all dylibs first (deepest level)
 echo "Signing dynamic libraries..."
@@ -52,25 +52,55 @@ find "$APP_PATH/Contents" -name "*.xpc" 2>/dev/null | while read xpc; do
     "$xpc" || echo "    Warning: Failed to sign $xpc"
 done
 
-# 3. Sign helper apps and binaries (Updater.app, Autoupdate, etc.)
-echo "Signing helper applications and binaries..."
-# Updater.app (Sparkle)
+# 3. Sign Sparkle components in CORRECT order (deepest first)
+echo "Signing Sparkle framework components..."
+
+# 3a. Sign Updater binary (inside Updater.app) FIRST
 if [ -f "$APP_PATH/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater" ]; then
-  echo "  - Updater.app"
+  echo "  - Updater binary (inside Updater.app)"
+  codesign --force --sign "$IDENTITY" \
+    --timestamp --options runtime \
+    "$APP_PATH/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater"
+fi
+
+# 3b. Sign Updater.app bundle (after its binary)
+if [ -d "$APP_PATH/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app" ]; then
+  echo "  - Updater.app bundle"
   codesign --force --sign "$IDENTITY" \
     --timestamp --options runtime \
     "$APP_PATH/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app"
 fi
 
-# Autoupdate binary (Sparkle)
+# 3c. Sign Autoupdate binary
 if [ -f "$APP_PATH/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate" ]; then
-  echo "  - Autoupdate"
+  echo "  - Autoupdate binary"
   codesign --force --sign "$IDENTITY" \
     --timestamp --options runtime \
     "$APP_PATH/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate"
 fi
 
-# Sign any other helper tools in MacOS directory (excluding main binary)
+# 3d. Sign Sparkle.framework (contains all the above - MUST be last)
+if [ -d "$APP_PATH/Contents/Frameworks/Sparkle.framework" ]; then
+  echo "  - Sparkle.framework (outer container)"
+  codesign --force --sign "$IDENTITY" \
+    --timestamp --options runtime \
+    "$APP_PATH/Contents/Frameworks/Sparkle.framework"
+fi
+
+# 4. Sign any other frameworks (AFTER their contents are signed)
+echo "Signing other frameworks..."
+find "$APP_PATH/Contents/Frameworks" -name "*.framework" -maxdepth 1 2>/dev/null | while read framework; do
+  # Skip Sparkle (already signed above)
+  if [[ "$framework" != *"Sparkle.framework"* ]]; then
+    echo "  - $(basename "$framework")"
+    codesign --force --sign "$IDENTITY" \
+      --timestamp --options runtime \
+      "$framework" || echo "    Warning: Failed to sign $framework"
+  fi
+done
+
+# 5. Sign helper tools in MacOS directory (excluding main binary)
+echo "Signing helper tools..."
 APP_NAME=$(basename "$APP_PATH" .app)
 find "$APP_PATH/Contents/MacOS" -type f -perm +111 ! -name "$APP_NAME" 2>/dev/null | while read helper; do
   echo "  - $(basename "$helper")"
@@ -79,16 +109,7 @@ find "$APP_PATH/Contents/MacOS" -type f -perm +111 ! -name "$APP_NAME" 2>/dev/nu
     "$helper" || echo "    Warning: Failed to sign $helper"
 done
 
-# 4. Sign all frameworks (Sparkle and any others)
-echo "Signing frameworks..."
-find "$APP_PATH/Contents/Frameworks" -name "*.framework" -depth 1 2>/dev/null | while read framework; do
-  echo "  - $(basename "$framework")"
-  codesign --force --sign "$IDENTITY" \
-    --timestamp --options runtime \
-    "$framework" || echo "    Warning: Failed to sign $framework"
-done
-
-# 5. Sign main app bundle (LAST, with entitlements)
+# 6. Sign main app bundle (LAST, with entitlements)
 echo "Signing main application bundle..."
 codesign --force --sign "$IDENTITY" \
   --timestamp --options runtime \
