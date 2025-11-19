@@ -43,17 +43,19 @@ find "$APP_PATH/Contents" -name "*.dylib" 2>/dev/null | while read dylib; do
     "$dylib" || echo "    Warning: Failed to sign $dylib"
 done
 
-# 2. Sign XPC Services
-echo "Signing XPC Services..."
-find "$APP_PATH/Contents" -name "*.xpc" 2>/dev/null | while read xpc; do
-  echo "  - $(basename "$xpc")"
-  codesign --force --sign "$IDENTITY" \
-    --timestamp --options runtime \
-    "$xpc" || echo "    Warning: Failed to sign $xpc"
-done
+# 2. Sign Sparkle XPC Services FIRST (before Sparkle.framework)
+echo "Signing Sparkle XPC Services..."
+if [ -d "$APP_PATH/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices" ]; then
+  find "$APP_PATH/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices" -name "*.xpc" 2>/dev/null | while read xpc; do
+    echo "  - $(basename "$xpc")"
+    codesign --force --sign "$IDENTITY" \
+      --timestamp --options runtime \
+      "$xpc"
+  done
+fi
 
-# 3. Sign Sparkle components in CORRECT order (deepest first)
-echo "Signing Sparkle framework components..."
+# 3. Sign other Sparkle components in CORRECT order (deepest first)
+echo "Signing other Sparkle components..."
 
 # 3a. Sign Updater binary (inside Updater.app) FIRST
 if [ -f "$APP_PATH/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater" ]; then
@@ -87,7 +89,19 @@ if [ -d "$APP_PATH/Contents/Frameworks/Sparkle.framework" ]; then
     "$APP_PATH/Contents/Frameworks/Sparkle.framework"
 fi
 
-# 4. Sign any other frameworks (AFTER their contents are signed)
+# 4. Sign non-Sparkle XPC Services (if any)
+echo "Signing other XPC Services..."
+find "$APP_PATH/Contents" -name "*.xpc" 2>/dev/null | while read xpc; do
+  # Skip Sparkle XPC services (already signed above)
+  if [[ "$xpc" != *"Sparkle.framework"* ]]; then
+    echo "  - $(basename "$xpc")"
+    codesign --force --sign "$IDENTITY" \
+      --timestamp --options runtime \
+      "$xpc" || echo "    Warning: Failed to sign $xpc"
+  fi
+done
+
+# 5. Sign any other frameworks (AFTER their contents are signed)
 echo "Signing other frameworks..."
 find "$APP_PATH/Contents/Frameworks" -name "*.framework" -maxdepth 1 2>/dev/null | while read framework; do
   # Skip Sparkle (already signed above)
@@ -99,7 +113,7 @@ find "$APP_PATH/Contents/Frameworks" -name "*.framework" -maxdepth 1 2>/dev/null
   fi
 done
 
-# 5. Sign helper tools in MacOS directory (excluding main binary)
+# 6. Sign helper tools in MacOS directory (excluding main binary)
 echo "Signing helper tools..."
 APP_NAME=$(basename "$APP_PATH" .app)
 find "$APP_PATH/Contents/MacOS" -type f -perm +111 ! -name "$APP_NAME" 2>/dev/null | while read helper; do
@@ -109,7 +123,7 @@ find "$APP_PATH/Contents/MacOS" -type f -perm +111 ! -name "$APP_NAME" 2>/dev/nu
     "$helper" || echo "    Warning: Failed to sign $helper"
 done
 
-# 6. Sign main app bundle (LAST, with entitlements)
+# 7. Sign main app bundle (LAST, with entitlements)
 echo "Signing main application bundle..."
 codesign --force --sign "$IDENTITY" \
   --timestamp --options runtime \
