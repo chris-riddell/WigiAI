@@ -16,7 +16,6 @@ echo "Signing all components in: $APP_PATH"
 if [ -n "$TEAM_ID" ]; then
     ENTITLEMENTS_TEMP=$(mktemp)
     sed -e "s/\$(AppIdentifierPrefix)/${TEAM_ID}./g" \
-        -e "s/\$(TeamIdentifierPrefix)//g" \
         "$(dirname "$0")/../WigiAI/WigiAI.entitlements" > "$ENTITLEMENTS_TEMP"
     trap "rm -f $ENTITLEMENTS_TEMP" EXIT
     echo "Expanded entitlements to: $ENTITLEMENTS_TEMP"
