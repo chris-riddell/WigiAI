@@ -121,17 +121,15 @@ jobs:
           TEAM_ID="${{ secrets.DEVELOPMENT_TEAM }}"
           SIGN_IDENTITY="${{ secrets.CODE_SIGN_IDENTITY }}"
 
-          # Execute the build with the most robust syntax
+          # Execute the build - using Automatic signing with identity override
           xcodebuild \
             -scheme WigiAI \
             -configuration Release \
             -derivedDataPath build \
             -destination 'generic/platform=macOS' \
             clean build \
-            CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="$TEAM_ID" \
             CODE_SIGN_IDENTITY="$SIGN_IDENTITY" \
-            PROVISIONING_PROFILE_SPECIFIER="" \
             OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" \
             ONLY_ACTIVE_ARCH=NO \
             ARCHS="arm64 x86_64"
