@@ -15,9 +15,12 @@ echo "Signing all components in: $APP_PATH"
 # Create temporary entitlements file with expanded variables
 if [ -n "$TEAM_ID" ]; then
     ENTITLEMENTS_TEMP=$(mktemp)
-    sed "s/\$(AppIdentifierPrefix)/${TEAM_ID}./g" "$(dirname "$0")/../WigiAI/WigiAI.entitlements" > "$ENTITLEMENTS_TEMP"
+    sed -e "s/\$(AppIdentifierPrefix)/${TEAM_ID}./g" \
+        -e "s/\$(TeamIdentifierPrefix)//g" \
+        "$(dirname "$0")/../WigiAI/WigiAI.entitlements" > "$ENTITLEMENTS_TEMP"
     trap "rm -f $ENTITLEMENTS_TEMP" EXIT
     echo "Expanded entitlements to: $ENTITLEMENTS_TEMP"
+    cat "$ENTITLEMENTS_TEMP"
 else
     ENTITLEMENTS_TEMP="$(dirname "$0")/../WigiAI/WigiAI.entitlements"
 fi
