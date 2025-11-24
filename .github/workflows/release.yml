@@ -303,7 +303,7 @@ jobs:
           GITHUB_REPO=$(echo "${{ github.repository }}" | cut -d'/' -f2)
           TAG_NAME="v${{ steps.get_version.outputs.VERSION }}"
           DMG_NAME=$(basename "${{ steps.create_dmg.outputs.DMG_PATH }}")
-          MAX_ATTEMPTS=30
+          MAX_ATTEMPTS=90
           ATTEMPT=0
 
           while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
