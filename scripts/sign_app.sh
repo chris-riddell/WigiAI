@@ -16,20 +16,16 @@ echo "Signing all components in: $APP_PATH"
 echo "Cleaning extended attributes..."
 xattr -cr "$APP_PATH"
 
-# Expand entitlements variables
-if [ -n "$TEAM_ID" ]; then
-    ENTITLEMENTS_TEMP=$(mktemp)
-    sed -e "s/\$(AppIdentifierPrefix)/${TEAM_ID}./g" \
-        -e "s/\$(TeamIdentifierPrefix)82L4HKJ83Z/${TEAM_ID}/g" \
-        "$(dirname "$0")/../WigiAI/WigiAI.entitlements" > "$ENTITLEMENTS_TEMP"
-    trap "rm -f $ENTITLEMENTS_TEMP" EXIT
-    echo "Expanded entitlements to: $ENTITLEMENTS_TEMP"
-    cat "$ENTITLEMENTS_TEMP"
-else
-    ENTITLEMENTS_TEMP="$(dirname "$0")/../WigiAI/WigiAI.entitlements"
-    echo "Using entitlements file: $ENTITLEMENTS_TEMP"
-    cat "$ENTITLEMENTS_TEMP"
+# Use Distribution Entitlements for manual signing (prevents POSIX 153 by excluding restricted entitlements)
+ENTITLEMENTS_TEMP="$(dirname "$0")/../WigiAI/WigiAI.distribution.entitlements"
+
+if [ ! -f "$ENTITLEMENTS_TEMP" ]; then
+    echo "Error: Distribution entitlements file not found at $ENTITLEMENTS_TEMP"
+    exit 1
 fi
+
+echo "Using entitlements file: $ENTITLEMENTS_TEMP"
+cat "$ENTITLEMENTS_TEMP"
 
 # CRITICAL: Sign from inside-out (deepest components first)
 # Violating this order causes POSIX 153!
