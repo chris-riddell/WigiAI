@@ -301,7 +301,7 @@ jobs:
           echo "Polling for release asset availability..."
           GITHUB_USER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
           GITHUB_REPO=$(echo "${{ github.repository }}" | cut -d'/' -f2)
-          TAG_NAME="v${{ steps.get_version.outputs.VERSION }}"
+          RELEASE_ID="${{ steps.create_release.outputs.id }}" # <-- Use release ID
           DMG_NAME=$(basename "${{ steps.create_dmg.outputs.DMG_PATH }}")
           MAX_ATTEMPTS=90
           ATTEMPT=0
@@ -310,15 +310,14 @@ jobs:
             ATTEMPT=$((ATTEMPT + 1))
             echo "Attempt $ATTEMPT/$MAX_ATTEMPTS: Checking if asset is available..."
 
-            # Use curl instead of gh CLI (which isn't installed)
+            # Use curl to query assets directly from the release ID
             RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/$GITHUB_USER/$GITHUB_REPO/releases/tags/$TAG_NAME")
+              "https://api.github.com/repos/$GITHUB_USER/$GITHUB_REPO/releases/$RELEASE_ID/assets") # <-- Modified API endpoint
 
-            ASSETS=$(echo "$RESPONSE" | grep -o '"name":"[^"]*"' | cut -d'"' -f4)
-
-            if echo "$ASSETS" | grep -q "$DMG_NAME"; then
+            # Check if the DMG name exists in the assets list
+            if echo "$RESPONSE" | grep -q ""name":"$DMG_NAME""; then
               # Found the asset, now check if it's downloadable
-              ASSET_URL=$(echo "$RESPONSE" | grep -o '"browser_download_url":"[^"]*'$DMG_NAME'"' | cut -d'"' -f4)
+              ASSET_URL=$(echo "$RESPONSE" | grep -o ""browser_download_url":"[^"]*$DMG_NAME"" | cut -d'"' -f4)
               if [ -n "$ASSET_URL" ]; then
                 HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L "$ASSET_URL")
 
