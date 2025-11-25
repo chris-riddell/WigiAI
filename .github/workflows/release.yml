@@ -297,48 +297,34 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Wait for release asset to be available
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Polling for release asset availability..."
-          GITHUB_USER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
-          GITHUB_REPO=$(echo "${{ github.repository }}" | cut -d'/' -f2)
-          RELEASE_ID="${{ steps.create_release.outputs.id }}" # <-- Use release ID
+          TAG_NAME="v${{ steps.get_version.outputs.VERSION }}"
           DMG_NAME=$(basename "${{ steps.create_dmg.outputs.DMG_PATH }}")
-          MAX_ATTEMPTS=90
+          MAX_ATTEMPTS=30
           ATTEMPT=0
+
+          echo "Looking for asset: $DMG_NAME in release: $TAG_NAME"
 
           while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
             ATTEMPT=$((ATTEMPT + 1))
-            echo "Attempt $ATTEMPT/$MAX_ATTEMPTS: Checking if asset is available..."
+            echo "Attempt $ATTEMPT/$MAX_ATTEMPTS..."
 
-            # Use curl to query assets directly from the release ID
-            RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/$GITHUB_USER/$GITHUB_REPO/releases/$RELEASE_ID/assets") # <-- Modified API endpoint
-
-            # Check if the DMG name exists in the assets list
-            if echo "$RESPONSE" | grep -q "\"name\":\"$DMG_NAME\""; then
-              # Found the asset, now check if it's downloadable
-              ASSET_URL=$(echo "$RESPONSE" | grep -o "\"browser_download_url\":\"[^\"]*$DMG_NAME\"" | cut -d'"' -f4)
-              if [ -n "$ASSET_URL" ]; then
-                HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L "$ASSET_URL")
-
-                if [ "$HTTP_STATUS" = "200" ]; then
-                  echo "✅ Asset is available and downloadable!"
-                  exit 0
-                else
-                  echo "Asset found but not yet downloadable (HTTP $HTTP_STATUS), waiting..."
-                fi
-              fi
-            else
-              echo "Asset not found in release yet, waiting..."
+            # Use gh CLI to list assets for the tag
+            # This handles auth, pagination, and JSON parsing reliably
+            if gh release view "$TAG_NAME" --json assets --jq '.assets[].name' | grep -q "^$DMG_NAME$"; then
+              echo "✅ Asset found!"
+              exit 0
             fi
 
-            sleep 2
+            echo "Asset not found yet. Waiting..."
+            sleep 10
           done
 
           echo "⚠️ Timeout: Asset did not become available after $MAX_ATTEMPTS attempts"
           exit 1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate Sparkle appcast
         env:
