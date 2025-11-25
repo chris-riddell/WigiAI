@@ -315,9 +315,9 @@ jobs:
               "https://api.github.com/repos/$GITHUB_USER/$GITHUB_REPO/releases/$RELEASE_ID/assets") # <-- Modified API endpoint
 
             # Check if the DMG name exists in the assets list
-            if echo "$RESPONSE" | grep -q ""name":"$DMG_NAME""; then
+            if echo "$RESPONSE" | grep -q "\"name\":\"$DMG_NAME\""; then
               # Found the asset, now check if it's downloadable
-              ASSET_URL=$(echo "$RESPONSE" | grep -o ""browser_download_url":"[^"]*$DMG_NAME"" | cut -d'"' -f4)
+              ASSET_URL=$(echo "$RESPONSE" | grep -o "\"browser_download_url\":\"[^\"]*$DMG_NAME\"" | cut -d'"' -f4)
               if [ -n "$ASSET_URL" ]; then
                 HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L "$ASSET_URL")
 
